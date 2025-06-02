@@ -1,0 +1,33 @@
+buildscript {
+    ext.kotlin_version = '2.1.0'
+    repositories {
+        google()
+        mavenCentral()
+      
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:8.2.2"
+        classpath "com.google.gms:google-services:4.4.0"
+        // classpath "com.chaquo.python:gradle:14.0.2" // Chaquopy plugin dependency
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        // maven { url "https://chaquo.com/maven" }
+    }
+}
+
+rootProject.buildDir = "../build"
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(":app")
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}

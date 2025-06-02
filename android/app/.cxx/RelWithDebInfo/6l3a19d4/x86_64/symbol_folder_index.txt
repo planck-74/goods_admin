@@ -1,0 +1,1 @@
+C:\development\goods\goods_admin\build\app\intermediates\cxx\RelWithDebInfo\6l3a19d4\obj\x86_64
