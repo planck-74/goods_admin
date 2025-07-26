@@ -330,7 +330,6 @@ void showEditProductSheet(BuildContext context, Product product) {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const SizedBox(height: 16),
-                      // Text fields for product details.
                       TextField(
                         controller: nameController,
                         decoration: const InputDecoration(
@@ -383,12 +382,11 @@ void showEditProductSheet(BuildContext context, Product product) {
                         controller: salesCountController,
                         keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
-                          labelText: "عدد البيعات",
+                          labelText: "عدد المبيعات",
                           border: OutlineInputBorder(),
                         ),
                       ),
                       const SizedBox(height: 20),
-                      // Action buttons.
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
@@ -396,12 +394,11 @@ void showEditProductSheet(BuildContext context, Product product) {
                             style: ElevatedButton.styleFrom(
                                 backgroundColor: kPrimaryColor),
                             onPressed: () async {
-                              // Upload new image if one was selected.
                               if (selectedImage != null) {
                                 newImageUrl = await uploadImage(
                                     selectedImage!, product.productId);
                               }
-                              // Create updated product.
+
                               Product updatedProduct = Product(
                                 name: nameController.text,
                                 manufacturer: manufacturerController.text,
@@ -415,7 +412,6 @@ void showEditProductSheet(BuildContext context, Product product) {
                                 imageUrl: newImageUrl ?? product.imageUrl,
                                 productId: product.productId,
                               );
-                              // Call updateProduct with context and updated product.
                               context
                                   .read<FirestoreServicesCubit>()
                                   .updateProduct(context, updatedProduct);
@@ -437,7 +433,6 @@ void showEditProductSheet(BuildContext context, Product product) {
                   ),
                 ),
               ),
-              // Positioned avatar at the top center.
               Positioned(
                 top: -72,
                 left: 0,
