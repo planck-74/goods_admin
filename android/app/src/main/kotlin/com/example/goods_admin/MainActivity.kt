@@ -1,4 +1,4 @@
-package com.example.goods_admin  
+package com.planck.goodsadmins  
 
 import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterActivity

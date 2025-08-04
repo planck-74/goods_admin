@@ -6,6 +6,7 @@ import 'package:goods_admin/presentation/screens/add_location/add_location.dart'
 import 'package:goods_admin/presentation/screens/add_location/locations.dart';
 import 'package:goods_admin/presentation/screens/add_product.dart';
 import 'package:goods_admin/presentation/screens/auth_screens/sign_in.dart';
+import 'package:goods_admin/presentation/screens/carousel_admin_screen.dart';
 import 'package:goods_admin/presentation/screens/edit_clients.dart';
 import 'package:goods_admin/presentation/screens/edit_products.dart';
 import 'package:goods_admin/presentation/screens/edit_products_classification.dart';
@@ -24,4 +25,5 @@ final Map<String, WidgetBuilder> routes = {
   '/AddCity': (context) => const AddCity(),
   '/AddArea': (context) => const AddArea(),
   '/Locations': (context) => const Locations(),
+  '/CarouselAdminScreen': (context) => const CarouselAdminScreen(),
 };

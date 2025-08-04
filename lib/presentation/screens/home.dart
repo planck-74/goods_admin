@@ -18,9 +18,7 @@ class Home extends StatelessWidget {
         Row(
           children: [
             GestureDetector(
-              onTap: () async {
-                await FirestoreService().unifyDocIds();
-              },
+              onTap: () async {},
               child: const Text('إدارة تطبيقات بضائع',
                   style: TextStyle(color: kWhiteColor)),
             ),
@@ -58,6 +56,12 @@ class Home extends StatelessWidget {
               screenWidth: screenWidth,
               text: 'إضافة موقع',
               routeName: '/AddLocation',
+            ),
+            _buildCustomContainer(
+              context: context,
+              screenWidth: screenWidth,
+              text: 'إضافة بانر دعائي',
+              routeName: '/CarouselAdminScreen',
             ),
           ],
         ),

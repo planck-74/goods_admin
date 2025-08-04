@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods_admin/business%20logic/cubits/add_classification_cubit/add_classification_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/add_location/add_location_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/auth/auth_cubit.dart';
+import 'package:goods_admin/business%20logic/cubits/carousel_cubit/carousel_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/controller/controllers_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/fetch_products/fetch_products_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/firestore_services_cubit/firestore_services_cubit.dart';
@@ -23,5 +24,6 @@ List<BlocProvider> buildProviders() {
     BlocProvider<GetClientDataCubit>(create: (context) => GetClientDataCubit()),
     BlocProvider<AuthCubit>(create: (context) => AuthCubit()),
     BlocProvider<AddLocationCubit>(create: (context) => AddLocationCubit()),
+    BlocProvider<CarouselCubit>(create: (context) => CarouselCubit()),
   ];
 }

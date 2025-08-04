@@ -92,6 +92,9 @@ class FirestoreServicesCubit extends Cubit<FirestoreServicesState> {
     emit(FirestoreServicesLoading());
 
     try {
+      print('Updating product: ${product.productId}');
+      print('Product data: ${product.toMap()}');
+      print('Collection path: $collectionPath');
       await db
           .collection(collectionPath)
           .doc(product.productId)
