@@ -58,7 +58,7 @@ class _EditClientsState extends State<EditClients> {
     }
   }
 
-  Future<void> _refreshSearchResults() async {
+  Future<void> refreshSearchResults() async {
     if (_searchController.text.isNotEmpty) {
       await _searchClients(_searchController.text);
     } else {
@@ -73,7 +73,7 @@ class _EditClientsState extends State<EditClients> {
         context,
         Row(
           children: [
-            const Text('العملاء', style: TextStyle(color: kWhiteColor)),
+            const Text('العملاء', style: TextStyle(color: whiteColor)),
             const SizedBox(width: 10),
             Expanded(
               child: _buildSearchField(),
@@ -88,7 +88,7 @@ class _EditClientsState extends State<EditClients> {
                 ? const Center(child: CircularProgressIndicator())
                 : _searchResults != null
                     ? RefreshIndicator(
-                        onRefresh: _refreshSearchResults,
+                        onRefresh: refreshSearchResults,
                         child: _buildClientList(_searchResults!),
                       )
                     : BlocBuilder<GetClientDataCubit, GetClientDataState>(
@@ -96,11 +96,11 @@ class _EditClientsState extends State<EditClients> {
                           if (state is GetClientDataLoading) {
                             return const Center(
                                 child: CircularProgressIndicator(
-                              color: kPrimaryColor,
+                              color: primaryColor,
                             ));
                           } else if (state is GetClientDataSuccess) {
                             return RefreshIndicator(
-                              onRefresh: _refreshSearchResults,
+                              onRefresh: refreshSearchResults,
                               child: state.clients.isEmpty
                                   ? const Center(
                                       child: Text(
@@ -131,7 +131,7 @@ class _EditClientsState extends State<EditClients> {
     return Container(
       height: 40,
       decoration: BoxDecoration(
-        color: kWhiteColor,
+        color: whiteColor,
         borderRadius: BorderRadius.circular(10),
       ),
       child: TextField(
@@ -160,9 +160,7 @@ class _EditClientsState extends State<EditClients> {
         return Padding(
           padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 0),
           child: GestureDetector(
-            onTap: () {
-              // showEditClientsheet(context, client);
-            },
+            onTap: () {},
             child: _buildClientCard(client),
           ),
         );
@@ -173,7 +171,7 @@ class _EditClientsState extends State<EditClients> {
   Widget _buildClientCard(ClientModel client) {
     return Container(
       decoration: BoxDecoration(
-        color: kWhiteColor,
+        color: whiteColor,
         borderRadius: BorderRadius.circular(50),
         boxShadow: [
           BoxShadow(
@@ -241,111 +239,3 @@ class _EditClientsState extends State<EditClients> {
     );
   }
 }
-
-// /// Bottom Sheet to edit client details (unchanged)
-// void showEditClientsheet(BuildContext context, ClientModel client) {
-//   final TextEditingController nameController =
-//       TextEditingController(text: client.name);
-//   final TextEditingController manufacturerController =
-//       TextEditingController(text: client.address);
-//   final TextEditingController sizeController =
-//       TextEditingController(text: client.businessName);
-//   final TextEditingController packageController =
-//       TextEditingController(text: client.category);
-//   final TextEditingController noteController =
-//       TextEditingController(text: client.phoneNumber.toString());
-//   final TextEditingController salesCountController =
-//       TextEditingController(text: client.secondPhoneNumber.toString());
-
-//   showModalBottomSheet(
-//     context: context,
-//     isScrollControlled: true,
-//     shape: const RoundedRectangleBorder(
-//       borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-//     ),
-//     builder: (context) => Padding(
-//       padding: EdgeInsets.only(
-//         bottom: MediaQuery.of(context).viewInsets.bottom,
-//         left: 16,
-//         right: 16,
-//         top: 16,
-//       ),
-//       child: SingleChildScrollView(
-//         child: Column(
-//           mainAxisSize: MainAxisSize.min,
-//           children: [
-//             const Text(
-//               "تعديل المنتج",
-//               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-//             ),
-//             const SizedBox(height: 16),
-//             TextField(
-//               controller: nameController,
-//               decoration: const InputDecoration(
-//                 labelText: "اسم المنتج",
-//                 border: OutlineInputBorder(),
-//               ),
-//             ),
-//             const SizedBox(height: 10),
-//             TextField(
-//               controller: sizeController,
-//               decoration: const InputDecoration(
-//                 labelText: "الحجم",
-//                 border: OutlineInputBorder(),
-//               ),
-//             ),
-//             const SizedBox(height: 10),
-//             TextField(
-//               controller: manufacturerController,
-//               decoration: const InputDecoration(
-//                 labelText: "الشركة المصنعة",
-//                 border: OutlineInputBorder(),
-//               ),
-//             ),
-//             const SizedBox(height: 10),
-//             TextField(
-//               controller: packageController,
-//               decoration: const InputDecoration(
-//                 labelText: "العبوة",
-//                 border: OutlineInputBorder(),
-//               ),
-//             ),
-//             const SizedBox(height: 10),
-//             const SizedBox(height: 10),
-//             TextField(
-//               controller: noteController,
-//               decoration: const InputDecoration(
-//                 labelText: "ملاحظات",
-//                 border: OutlineInputBorder(),
-//               ),
-//             ),
-//             const SizedBox(height: 20),
-//             Row(
-//               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-//               children: [
-//                 ElevatedButton(
-//                   style:
-//                       ElevatedButton.styleFrom(backgroundColor: primaryColor),
-//                   onPressed: () {
-//                     Navigator.pop(context);
-//                   },
-//                   child: const Text(
-//                     "حفظ",
-//                     style: TextStyle(color: Colors.white),
-//                   ),
-//                 ),
-//                 ElevatedButton(
-//                   onPressed: () => Navigator.pop(context),
-//                   style:
-//                       ElevatedButton.styleFrom(backgroundColor: Colors.white),
-//                   child: const Text("إلغاء"),
-//                 ),
-//               ],
-//             ),
-//             const SizedBox(height: 20),
-//           ],
-//         ),
-//       ),
-//     ),
-//   );
-// }

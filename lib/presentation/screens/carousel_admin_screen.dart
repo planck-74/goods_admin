@@ -13,7 +13,7 @@ class CarouselAdminScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('إدارة صور الكاروسيل'),
-        backgroundColor: kPrimaryColor,
+        backgroundColor: primaryColor,
         foregroundColor: Colors.white,
       ),
       body: BlocListener<CarouselCubit, CarouselState>(
@@ -36,7 +36,6 @@ class CarouselAdminScreen extends StatelessWidget {
         },
         child: Column(
           children: [
-            // Upload Section
             Container(
               padding: const EdgeInsets.all(16),
               child: ElevatedButton.icon(
@@ -44,14 +43,12 @@ class CarouselAdminScreen extends StatelessWidget {
                 icon: const Icon(Icons.cloud_upload),
                 label: const Text('رفع صورة جديدة'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: kPrimaryColor,
+                  backgroundColor: primaryColor,
                   foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 50),
                 ),
               ),
             ),
-
-            // Images List
             Expanded(
               child: BlocBuilder<CarouselCubit, CarouselState>(
                 builder: (context, state) {

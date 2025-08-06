@@ -15,6 +15,8 @@ class FirestoreServicesCubit extends Cubit<FirestoreServicesState> {
   final Map<String, String> packageUnit = {};
   final Map<String, String> sizeUnit = {};
 
+  CollectionReference get _productsRef => db.collection(collectionPath);
+
   FirestoreServicesCubit() : super(FirestoreServicesInitial());
 
   Future<void> addProduct(
@@ -31,22 +33,77 @@ class FirestoreServicesCubit extends Cubit<FirestoreServicesState> {
 
       emit(FirestoreServicesLoaded());
     } catch (e) {
-      print('Error adding product: $e');
       emit(FirestoreServicesError('حدث خطأ أثناء إضافة المنتج: $e'));
     }
   }
 
+  Future<List<QueryDocumentSnapshot>> searchByWords(String searchQuery) async {
+    if (searchQuery.trim().isEmpty) return [];
+
+    String cleanQuery = searchQuery.toLowerCase().trim();
+    List<String> searchWords =
+        cleanQuery.split(' ').where((word) => word.isNotEmpty).toList();
+
+    QuerySnapshot allProducts = await _productsRef.get();
+
+    List<SearchResult> scoredResults = [];
+
+    for (var doc in allProducts.docs) {
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      String productName = (data['name'] ?? '').toString().toLowerCase();
+
+      double score = 0.0;
+
+      if (productName.contains(cleanQuery)) {
+        score += 10.0;
+
+        if (productName.startsWith(cleanQuery)) {
+          score += 5.0;
+        }
+      }
+
+      int matchedWords = 0;
+      for (String word in searchWords) {
+        if (productName.contains(word)) {
+          matchedWords++;
+          score += 3.0;
+
+          if (productName.startsWith(word)) {
+            score += 2.0;
+          }
+        }
+      }
+
+      if (score > 0) {
+        if (matchedWords == searchWords.length) {
+          score += 5.0;
+        }
+
+        scoredResults.add(SearchResult(doc, score));
+      }
+    }
+
+    scoredResults.sort((a, b) => b.score.compareTo(a.score));
+
+    return scoredResults.map((result) => result.document).toList();
+  }
+
   Future<List<QueryDocumentSnapshot>> searchProductsByName(
       String searchQuery) async {
-    CollectionReference productsRef =
-        FirebaseFirestore.instance.collection('products');
+    if (searchQuery.trim().isEmpty) return [];
 
-    QuerySnapshot querySnapshot = await productsRef
-        .where('name', isGreaterThanOrEqualTo: searchQuery)
-        .where('name', isLessThanOrEqualTo: '$searchQuery\uf8ff')
-        .get();
+    String cleanQuery = searchQuery.toLowerCase().trim();
 
-    return querySnapshot.docs;
+    QuerySnapshot allProducts = await _productsRef.get();
+
+    List<QueryDocumentSnapshot> results = allProducts.docs.where((doc) {
+      Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      String productName = (data['name'] ?? '').toString().toLowerCase();
+
+      return productName.contains(cleanQuery);
+    }).toList();
+
+    return results;
   }
 
   Future<void> getProductsClassifications() async {
@@ -54,7 +111,7 @@ class FirestoreServicesCubit extends Cubit<FirestoreServicesState> {
 
     try {
       emit(FirestoreServicesLoading());
-      // جلب البيانات من المستندات وتحديث الخرائط
+
       DocumentSnapshot classificationsDoc =
           await adminData.doc('classification').get();
       DocumentSnapshot manufacturerDoc =
@@ -92,20 +149,18 @@ class FirestoreServicesCubit extends Cubit<FirestoreServicesState> {
     emit(FirestoreServicesLoading());
 
     try {
-      print('Updating product: ${product.productId}');
-      print('Product data: ${product.toMap()}');
-      print('Collection path: $collectionPath');
       await db
           .collection(collectionPath)
           .doc(product.productId)
           .update(product.toMap());
+      syncStoreProductsByIds(
+          context, 'cafb6e90-0ab1-11f0-b25a-8b76462b3bd5', [product.productId]);
       emit(FirestoreServicesLoaded());
     } catch (e) {
       emit(FirestoreServicesError('حدث خطأ أثناء تحديث المنتج: $e'));
     }
   }
 
-  // New deleteProduct method
   Future<void> deleteProduct(BuildContext context, Product product) async {
     emit(FirestoreServicesLoading());
     try {
@@ -116,4 +171,77 @@ class FirestoreServicesCubit extends Cubit<FirestoreServicesState> {
       emit(FirestoreServicesError('حدث خطأ أثناء حذف المنتج: $e'));
     }
   }
+}
+
+class SearchResult {
+  final QueryDocumentSnapshot document;
+  final double score;
+
+  SearchResult(this.document, this.score);
+}
+
+Future<void> syncStoreProductsByIds(
+  BuildContext context,
+  String storeId,
+  List<String> productDocIds,
+) async {
+  try {
+    print('🔄 Starting synchronization by product IDs...');
+    print('🏪 Store ID: $storeId');
+    print('🧾 Provided product IDs: $productDocIds');
+
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+    WriteBatch batch = firestore.batch();
+    int updatedCount = 0;
+
+    for (String storeProductId in productDocIds) {
+      final storeDocRef = firestore
+          .collection('stores')
+          .doc(storeId)
+          .collection('products')
+          .doc(storeProductId);
+
+      final storeDoc = await storeDocRef.get();
+
+      if (!storeDoc.exists) {
+        print('⚠️ Store product not found: $storeProductId');
+        continue;
+      }
+
+      final storeProduct = storeDoc.data()!;
+      final mainProductId = storeProduct['productId'];
+
+      print(
+          '🔍 Processing store product: ${storeProduct['name']} (ID: $mainProductId)');
+
+      final mainProductDoc =
+          await firestore.collection('products').doc(mainProductId).get();
+
+      if (mainProductDoc.exists) {
+        final mainProduct = mainProductDoc.data()!;
+
+        final updatedData = {
+          ...storeProduct,
+          'name': mainProduct['name'],
+          'classification': mainProduct['classification'],
+          'imageUrl': mainProduct['imageUrl'],
+          'manufacturer': mainProduct['manufacturer'],
+          'size': mainProduct['size'],
+          'package': mainProduct['package'],
+          'note': mainProduct['note'],
+        };
+
+        batch.update(storeDocRef, updatedData);
+        updatedCount++;
+        print('📝 Prepared update for product');
+      } else {
+        print('⚠️ Product not found in main collection: $mainProductId');
+      }
+    }
+
+    print('💾 Saving batch updates...');
+    await batch.commit();
+
+    print('✅ Successfully updated $updatedCount products');
+  } catch (e) {}
 }

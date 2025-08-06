@@ -15,13 +15,12 @@ class ImageCubit extends Cubit<ImageState> {
 
       if (image != null) {
         emit(ImageLoaded(File(image!.path)));
-        print('Image picked successfully');
       } else {
         emit(ImageError('No image selected'));
       }
     } catch (e) {
       emit(ImageError('Failed to pick image: $e'));
-      print('Error picking image: $e');
+      ('Error picking image: $e');
     }
   }
 }

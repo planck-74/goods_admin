@@ -31,7 +31,7 @@ class _AddGovernmentState extends State<AddGovernment> {
         context,
         const Text(
           'إضافة محافظة',
-          style: TextStyle(color: kWhiteColor),
+          style: TextStyle(color: whiteColor),
         ),
       ),
       body: Center(

@@ -38,11 +38,10 @@ class CarouselCubit extends Cubit<CarouselState> {
 
       final File? imageFile = await _carouselService.pickImage();
       if (imageFile == null) {
-        emit(CarouselUploadError('لم يتم اختيار صورة'));
+        emit(const CarouselUploadError('لم يتم اختيار صورة'));
         return;
       }
 
-      // Get next order number
       final currentState = state;
       int nextOrder = 0;
       if (currentState is CarouselLoaded) {
@@ -52,7 +51,6 @@ class CarouselCubit extends Cubit<CarouselState> {
       await _carouselService.addCarouselImage(imageFile, nextOrder);
       emit(CarouselUploadSuccess());
 
-      // Reload images
       loadCarouselImages();
     } catch (e) {
       emit(CarouselUploadError(e.toString()));

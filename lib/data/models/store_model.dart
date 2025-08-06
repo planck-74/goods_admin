@@ -1,7 +1,7 @@
 class Store {
-  String storeId; // معرف المتجر
-  String supplierId; // معرف المورد
-  List<StoreProduct> products; // قائمة بالمنتجات في المتجر
+  String storeId;
+  String supplierId;
+  List<StoreProduct> products;
 
   Store({
     required this.storeId,
@@ -26,7 +26,7 @@ class Store {
 
 class StoreProduct {
   String productId;
-  String availability; 
+  String availability;
   String? offer;
 
   StoreProduct({

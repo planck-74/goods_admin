@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods_admin/business%20logic/cubits/controller/controllers_cubit.dart';
@@ -27,7 +26,6 @@ class _AddProductState extends State<AddProduct> {
   @override
   void initState() {
     super.initState();
-    context.read<GetClassificationsCubit>().getProductsClassifications();
   }
 
   void _clearForm() {
@@ -55,7 +53,7 @@ class _AddProductState extends State<AddProduct> {
           children: [
             const Text(
               'إضافة منتج',
-              style: TextStyle(color: kWhiteColor),
+              style: TextStyle(color: whiteColor),
             ),
             const Spacer(),
             IconButton(
@@ -72,7 +70,7 @@ class _AddProductState extends State<AddProduct> {
           if (state is GetClassificationsLoading) {
             return const Center(
                 child: CircularProgressIndicator(
-              color: kPrimaryColor,
+              color: primaryColor,
             ));
           }
           if (state is GetClassificationsError) {
@@ -123,7 +121,7 @@ class _AddProductState extends State<AddProduct> {
                         },
                         child: CircleAvatar(
                           radius: 72,
-                          backgroundColor: kPrimaryColor,
+                          backgroundColor: primaryColor,
                           child: CircleAvatar(
                             radius: 70,
                             backgroundColor: Colors.white,
@@ -133,7 +131,7 @@ class _AddProductState extends State<AddProduct> {
                             child: selectedImage == null
                                 ? const Icon(
                                     Icons.shopping_bag_rounded,
-                                    color: kPrimaryColor,
+                                    color: primaryColor,
                                     size: 64,
                                   )
                                 : null,
@@ -185,13 +183,12 @@ class _AddProductState extends State<AddProduct> {
                             .manufacturer
                             .entries
                             .map((entry) => DropdownMenuEntry(
-                                  value: entry.key, // 🔹 Store key as value
-                                  label: entry.value, // 🔹 Show value as label
+                                  value: entry.key,
+                                  label: entry.value,
                                 ))
                             .toList(),
                         label: const Text('الشركة المصنعة'),
                         onSelected: (value) {
-                          // 🔹 Update state when selected
                           setState(() {
                             context.read<ControllersCubit>().manufacturer =
                                 value;
@@ -369,7 +366,7 @@ class _PackageTypeWidgetState extends State<PackageTypeWidget> {
           Expanded(
             flex: 2,
             child: DropdownMenu(
-              width: double.infinity, // ✅ Force it to take full width
+              width: double.infinity,
               label: const Text(
                 'نوع العبوة',
                 style: TextStyle(fontSize: 12),
@@ -416,7 +413,7 @@ class _PackageTypeWidgetState extends State<PackageTypeWidget> {
           Expanded(
             flex: 2,
             child: DropdownMenu(
-              width: double.infinity, // ✅ Force it to take full width
+              width: double.infinity,
               label: const Text(
                 'الوحدة',
                 style: TextStyle(fontSize: 12),

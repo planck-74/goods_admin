@@ -1,4 +1,3 @@
-// auth_state.dart
 part of 'auth_cubit.dart';
 
 @immutable

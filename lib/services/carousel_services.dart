@@ -12,7 +12,6 @@ class CarouselService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  // Get carousel images stream
   Stream<List<CarouselImageModel>> getCarouselImages() {
     return _firestore
         .collection(_collectionName)
@@ -26,7 +25,6 @@ class CarouselService {
             .toList());
   }
 
-  // Upload image to Firebase Storage
   Future<String> _uploadImage(File imageFile) async {
     final String fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
     final Reference ref = _storage.ref().child('$_storagePath/$fileName');
@@ -37,7 +35,6 @@ class CarouselService {
     return await snapshot.ref.getDownloadURL();
   }
 
-  // Add new carousel image
   Future<void> addCarouselImage(File imageFile, int order) async {
     try {
       final String imageUrl = await _uploadImage(imageFile);
@@ -59,10 +56,8 @@ class CarouselService {
     }
   }
 
-  // Delete carousel image
   Future<void> deleteCarouselImage(String imageId, String imageUrl) async {
     try {
-      // Delete from Firestore
       await _firestore
           .collection(_collectionName)
           .doc('carousel')
@@ -70,14 +65,12 @@ class CarouselService {
           .doc(imageId)
           .delete();
 
-      // Delete from Storage
       await _storage.refFromURL(imageUrl).delete();
     } catch (e) {
       throw Exception('فشل في حذف الصورة: $e');
     }
   }
 
-  // Update image order
   Future<void> updateImageOrder(String imageId, int newOrder) async {
     await _firestore
         .collection(_collectionName)
@@ -87,7 +80,6 @@ class CarouselService {
         .update({'order': newOrder});
   }
 
-  // Pick image from gallery
   Future<File?> pickImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(

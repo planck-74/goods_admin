@@ -20,7 +20,7 @@ class _AddLocationState extends State<AddLocation> {
           context,
           const Text(
             'إضافة موقع',
-            style: TextStyle(color: kWhiteColor),
+            style: TextStyle(color: whiteColor),
           )),
       body: Column(
         children: [

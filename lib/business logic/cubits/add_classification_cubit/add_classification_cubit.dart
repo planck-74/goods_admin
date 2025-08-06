@@ -13,7 +13,6 @@ class AddClassificationCubit extends Cubit<AddClassificationState> {
       String classificationName, BuildContext context) async {
     emit(AddClassificationLoading());
 
-    // Await the asynchronous update call
     await db
         .collection('admin_data')
         .doc(newClassification)

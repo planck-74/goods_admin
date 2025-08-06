@@ -9,20 +9,16 @@ class GetClientDataCubit extends Cubit<GetClientDataState> {
 
   Future<void> getClientData() async {
     try {
-      // Emit loading state
       emit(GetClientDataLoading());
 
-      // Fetch the Client data from Firestore using the UID
       QuerySnapshot<Map<String, dynamic>> documentSnapshot =
           await FirebaseFirestore.instance.collection('clients').get();
 
       List<ClientModel> clients = documentSnapshot.docs
           .map((e) => ClientModel.fromMap(e.data()))
           .toList();
-      print('clients: ${clients.length}');
       emit(GetClientDataSuccess(clients));
     } catch (e) {
-      // Emit error state if something goes wrong
       emit(GetClientDataError(e.toString()));
     }
   }

@@ -35,7 +35,7 @@ class _AddAreaState extends State<AddArea> {
         context,
         const Text(
           'إضافة منطقة',
-          style: TextStyle(color: kWhiteColor),
+          style: TextStyle(color: whiteColor),
         ),
       ),
       body: Center(
@@ -49,8 +49,6 @@ class _AddAreaState extends State<AddArea> {
                 style: TextStyle(fontSize: 32),
               ),
               const SizedBox(height: 24),
-
-              /// Dropdown for Government
               DropdownMenu<String>(
                 width: screenWidth * 0.95,
                 label: const Text('اختر المحافظة'),
@@ -61,14 +59,11 @@ class _AddAreaState extends State<AddArea> {
                   setState(() {
                     selectedGovernment = newValue;
                     selectedCity = null;
-                    cubit.fetchCities(
-                        newValue!); // fetch cities under selected gov
+                    cubit.fetchCities(newValue!);
                   });
                 },
               ),
               const SizedBox(height: 12),
-
-              /// Dropdown for City
               DropdownMenu<String>(
                 width: screenWidth * 0.95,
                 label: const Text('اختر المدينة'),
@@ -82,8 +77,6 @@ class _AddAreaState extends State<AddArea> {
                 },
               ),
               const SizedBox(height: 12),
-
-              /// Text field for area name
               TextField(
                 controller: controller,
                 decoration: const InputDecoration(
@@ -92,8 +85,6 @@ class _AddAreaState extends State<AddArea> {
                 ),
               ),
               const SizedBox(height: 12),
-
-              /// Add button
               customOutlinedButton2(
                 width: screenWidth * 0.95,
                 height: 50,

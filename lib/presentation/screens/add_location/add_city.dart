@@ -22,7 +22,6 @@ class _AddCityState extends State<AddCity> {
   void initState() {
     super.initState();
     context.read<AddLocationCubit>().fetchGovernments().then((_) {
-      // Optional: Set the default value if you want
       if (context.read<AddLocationCubit>().governmentList.isNotEmpty) {
         setState(() {
           selectedGovernment =
@@ -43,7 +42,7 @@ class _AddCityState extends State<AddCity> {
         context,
         const Text(
           'إضافة مدينة',
-          style: TextStyle(color: kWhiteColor),
+          style: TextStyle(color: whiteColor),
         ),
       ),
       body: Center(
@@ -85,7 +84,6 @@ class _AddCityState extends State<AddCity> {
                       setState(() {
                         selectedGovernment = newValue;
                       });
-                      print('Selected Government: $selectedGovernment');
                     },
                   ),
                   const SizedBox(height: 12),

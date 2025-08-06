@@ -5,16 +5,14 @@ import 'package:goods_admin/business%20logic/cubits/controller/controller_state.
 class ControllersCubit extends Cubit<ControllersState> {
   ControllersCubit() : super(ControllersInitial());
 
-  // sign in controllers
   TextEditingController email = TextEditingController();
   TextEditingController password = TextEditingController();
 
-  // add product contorollers
   TextEditingController name = TextEditingController();
   TextEditingController note = TextEditingController();
 
   String? manufacturer;
-  // size controllers
+
   TextEditingController textSizeController = TextEditingController();
   String? selectedSizeValue;
   TextEditingController packageNumber = TextEditingController();
@@ -30,6 +28,6 @@ class ControllersCubit extends Cubit<ControllersState> {
     packageUnit = null;
     classification = null;
     manufacturer = null;
-    emit(ControllersUpdatedState()); // 🔹 تأكد من تحديث الحالة هنا
+    emit(ControllersUpdatedState());
   }
 }

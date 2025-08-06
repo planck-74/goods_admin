@@ -28,7 +28,7 @@ class _EditProductsClassificationState
           context,
           const Text(
             'تعديل التصنيفات',
-            style: TextStyle(color: kWhiteColor),
+            style: TextStyle(color: whiteColor),
           ),
         ),
         body: Center(
@@ -63,10 +63,9 @@ class _EditProductsClassificationState
                   ],
                   onSelected: (newValue) {
                     setState(() {
-                      selectedValue = newValue; // Update selected value
+                      selectedValue = newValue;
                     });
-                    print(
-                        'Selected Value: $selectedValue'); // Print the selected value
+                    print('Selected Value: $selectedValue');
                   },
                 ),
                 const SizedBox(

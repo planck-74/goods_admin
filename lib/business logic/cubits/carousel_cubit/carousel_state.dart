@@ -1,10 +1,6 @@
-// cubit/carousel_cubit.dart
-import 'dart:io';
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods_admin/data/models/carousel_image_model.dart';
 
-// States
 abstract class CarouselState extends Equatable {
   const CarouselState();
 

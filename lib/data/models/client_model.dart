@@ -38,10 +38,8 @@ class ClientModel {
       secondPhoneNumber: map['secondPhoneNumber'] ?? '',
       geoPoint: map['geoPoint'] ?? const GeoPoint(0, 0),
       isProfileComplete: map['isProfileComplete'] ?? false,
-      totalSavings: map['totalSavings']?.toDouble() ??
-          0.0, // Ensure totalSavings is a double
-      totalPayments: map['totalPayments']?.toDouble() ??
-          0.0, // Ensure totalPayments is a double
+      totalSavings: map['totalSavings']?.toDouble() ?? 0.0,
+      totalPayments: map['totalPayments']?.toDouble() ?? 0.0,
     );
   }
 
@@ -61,8 +59,8 @@ class ClientModel {
       'secondPhoneNumber': secondPhoneNumber,
       'geoPoint': geoPoint,
       'isProfileComplete': isProfileComplete,
-      'totalSavings': totalSavings, // Added totalSavings to map
-      'totalPayments': totalPayments, // Added totalPayments to map
+      'totalSavings': totalSavings,
+      'totalPayments': totalPayments,
     };
   }
 }

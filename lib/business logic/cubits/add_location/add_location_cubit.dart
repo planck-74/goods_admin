@@ -43,7 +43,6 @@ class AddLocationCubit extends Cubit<AddLocationState> {
       emit(AddLocationSuccess());
     } catch (e) {
       emit(AddLocationError(e.toString()));
-      print('Error fetching governments: $e');
     }
   }
 

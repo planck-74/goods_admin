@@ -20,7 +20,7 @@ class _LocationsState extends State<Locations> {
         context,
         const Text(
           'المحافظات والمدن والمناطق',
-          style: TextStyle(color: kWhiteColor),
+          style: TextStyle(color: whiteColor),
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(

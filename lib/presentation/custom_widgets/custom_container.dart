@@ -39,7 +39,7 @@ Widget customContainer({
             child: Text(
               text,
               style: const TextStyle(
-                color: kWhiteColor,
+                color: whiteColor,
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
               ),

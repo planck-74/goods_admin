@@ -15,15 +15,14 @@ Widget customTextField(
         height: 60,
         width: width * 0.9,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.8), // White background color
-          borderRadius: BorderRadius.circular(3), // Rounded corners
-
+          color: Colors.white.withOpacity(0.8),
+          borderRadius: BorderRadius.circular(3),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.5), // Shadow color
-              spreadRadius: 2, // Spread radius
-              blurRadius: 5, // Blur radius
-              offset: const Offset(0, 3), // Shadow position (x, y)
+              color: Colors.grey.withOpacity(0.5),
+              spreadRadius: 2,
+              blurRadius: 5,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -32,11 +31,11 @@ Widget customTextField(
           keyboardType: keyboardType,
           decoration: InputDecoration(
             focusedBorder: InputBorder.none,
-            hintText: labelText, // Placeholder text inside the TextField
+            hintText: labelText,
             hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 18),
-            border: InputBorder.none, // No border
-            contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16.0, vertical: 12.0), // Padding inside TextField
+            border: InputBorder.none,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           ),
           validator: validator ??
               (value) {

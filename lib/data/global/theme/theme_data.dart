@@ -1,53 +1,33 @@
 import 'package:flutter/material.dart';
 
-// Define color constants for reusability
-const Color kPrimaryColor = Color.fromARGB(255, 190, 30, 19);
+const Color primaryColor = Color.fromARGB(255, 190, 30, 19);
 const Color kDarkBlueColor = Color(0xFF012340);
 const Color kLightBackgroundColor = Color.fromARGB(255, 242, 242, 242);
-const Color kWhiteColor = Colors.white;
-
+const Color whiteColor = Colors.white;
+String storeId = 'cafb6e90-0ab1-11f0-b25a-8b76462b3bd5';
 ThemeData getThemeData() {
   return ThemeData(
-    // progressIndicator
-    progressIndicatorTheme:
-        const ProgressIndicatorThemeData(color: kWhiteColor),
-    // Background colors
-    dialogBackgroundColor: kDarkBlueColor,
+    progressIndicatorTheme: const ProgressIndicatorThemeData(color: whiteColor),
     scaffoldBackgroundColor: kLightBackgroundColor,
-
-    // Text selection theme
     textSelectionTheme: const TextSelectionThemeData(
         cursorColor: kDarkBlueColor, selectionHandleColor: kDarkBlueColor),
-
-    // Input decoration theme (for TextField label style)
     inputDecorationTheme: _inputDecorationTheme(),
-
-    // DropdownButton global style
     dropdownMenuTheme: _dropdownMenuTheme(),
-
-    // Primary color scheme
     primarySwatch: Colors.red,
-    primaryColor: kPrimaryColor,
+    primaryColor: primaryColor,
     secondaryHeaderColor: kDarkBlueColor,
-
-    // Hover color
-    hoverColor: kWhiteColor,
-
-    // AppBar theme
+    hoverColor: whiteColor,
     appBarTheme: const AppBarTheme(
-      color: kPrimaryColor,
-      iconTheme: IconThemeData(color: kWhiteColor),
+      color: primaryColor,
+      iconTheme: IconThemeData(color: whiteColor),
     ),
-
-    // Button theme (removed unused property `elevatedButtonTheme`)
     buttonTheme: const ButtonThemeData(
-      buttonColor: kPrimaryColor,
+      buttonColor: primaryColor,
       height: 50,
     ),
-
-    // Global text theme
     fontFamily: 'Cairo',
     textTheme: _textTheme(),
+    dialogTheme: DialogThemeData(backgroundColor: whiteColor),
   );
 }
 

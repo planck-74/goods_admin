@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods_admin/business%20logic/cubits/controller/controllers_cubit.dart';
-import 'package:goods_admin/business%20logic/cubits/auth/auth_cubit.dart'; // Make sure to import your AuthCubit
+import 'package:goods_admin/business%20logic/cubits/auth/auth_cubit.dart';
 import 'package:goods_admin/presentation/backgrounds/otp_background.dart';
 import 'package:goods_admin/presentation/custom_widgets/custom_buttons/custom_outlinedButton.dart';
 import 'package:goods_admin/presentation/custom_widgets/custom_textfield.dart';
