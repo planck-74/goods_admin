@@ -7,15 +7,23 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:goods_admin/business%20logic/routes.dart';
 import 'package:goods_admin/business%20logic/providers.dart';
 import 'package:goods_admin/data/global/theme/theme_data.dart';
+import 'package:goods_admin/firebase_options.dart';
 import 'package:goods_admin/presentation/screens/auth_screens/sign_in.dart';
 import 'package:goods_admin/presentation/screens/home.dart';
 
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  await FirebaseAppCheck.instance.activate(
-    androidProvider: AndroidProvider.playIntegrity,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  if (!Platform.isWindows && !kIsWeb) {
+    await FirebaseAppCheck.instance.activate(
+      androidProvider: AndroidProvider.playIntegrity,
+    );
+  }
+
   runApp(const GoodsAdmin());
 }
 

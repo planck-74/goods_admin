@@ -1,6 +1,8 @@
-import 'package:bloc/bloc.dart';
+// Fixed FirestoreServicesCubit with proper sync function
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:goods_admin/business%20logic/cubits/fetch_products/fetch_products_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/firestore_services_cubit/firestore_services_state.dart';
 import 'package:goods_admin/data/models/product_model.dart';
 import 'package:goods_admin/presentation/custom_widgets/snack_bar.dart';
@@ -29,8 +31,10 @@ class FirestoreServicesCubit extends Cubit<FirestoreServicesState> {
           .doc(product.productId)
           .set(product.toMap());
 
-      showSuccessMessage(context, 'تمت إضافة المنتج بنجاح');
+      // Update local cache instead of refetching
+      context.read<FetchProductsCubit>().addProductToList(product);
 
+      showSuccessMessage(context, 'تمت إضافة المنتج بنجاح');
       emit(FirestoreServicesLoaded());
     } catch (e) {
       emit(FirestoreServicesError('حدث خطأ أثناء إضافة المنتج: $e'));
@@ -153,8 +157,14 @@ class FirestoreServicesCubit extends Cubit<FirestoreServicesState> {
           .collection(collectionPath)
           .doc(product.productId)
           .update(product.toMap());
-      syncStoreProductsByIds(
+
+      // Update local cache instead of refetching
+      context.read<FetchProductsCubit>().updateProductInList(product);
+
+      // Call sync function properly
+      await syncStoreProductsByIds(
           context, 'cafb6e90-0ab1-11f0-b25a-8b76462b3bd5', [product.productId]);
+
       emit(FirestoreServicesLoaded());
     } catch (e) {
       emit(FirestoreServicesError('حدث خطأ أثناء تحديث المنتج: $e'));
@@ -165,10 +175,85 @@ class FirestoreServicesCubit extends Cubit<FirestoreServicesState> {
     emit(FirestoreServicesLoading());
     try {
       await db.collection(collectionPath).doc(product.productId).delete();
+
+      // Update local cache instead of refetching
+      context
+          .read<FetchProductsCubit>()
+          .removeProductFromList(product.productId);
+
       showSuccessMessage(context, 'تم حذف المنتج بنجاح');
       emit(FirestoreServicesLoaded());
     } catch (e) {
       emit(FirestoreServicesError('حدث خطأ أثناء حذف المنتج: $e'));
+    }
+  }
+
+  // Move the sync function here to make it accessible
+  Future<void> syncStoreProductsByIds(
+    BuildContext context,
+    String storeId,
+    List<String> productDocIds,
+  ) async {
+    try {
+      print('🔄 Starting synchronization by product IDs...');
+      print('🏪 Store ID: $storeId');
+      print('🧾 Provided product IDs: $productDocIds');
+
+      final FirebaseFirestore firestore = FirebaseFirestore.instance;
+      WriteBatch batch = firestore.batch();
+      int updatedCount = 0;
+
+      for (String storeProductId in productDocIds) {
+        final storeDocRef = firestore
+            .collection('stores')
+            .doc(storeId)
+            .collection('products')
+            .doc(storeProductId);
+
+        final storeDoc = await storeDocRef.get();
+
+        if (!storeDoc.exists) {
+          print('⚠️ Store product not found: $storeProductId');
+          continue;
+        }
+
+        final storeProduct = storeDoc.data()!;
+        final mainProductId = storeProduct['productId'];
+
+        print(
+            '🔍 Processing store product: ${storeProduct['name']} (ID: $mainProductId)');
+
+        final mainProductDoc =
+            await firestore.collection('products').doc(mainProductId).get();
+
+        if (mainProductDoc.exists) {
+          final mainProduct = mainProductDoc.data()!;
+
+          final updatedData = {
+            ...storeProduct,
+            'name': mainProduct['name'],
+            'classification': mainProduct['classification'],
+            'imageUrl': mainProduct['imageUrl'],
+            'manufacturer': mainProduct['manufacturer'],
+            'size': mainProduct['size'],
+            'package': mainProduct['package'],
+            'note': mainProduct['note'],
+          };
+
+          batch.update(storeDocRef, updatedData);
+          updatedCount++;
+          print('📝 Prepared update for product');
+        } else {
+          print('⚠️ Product not found in main collection: $mainProductId');
+        }
+      }
+
+      print('💾 Saving batch updates...');
+      await batch.commit();
+
+      print('✅ Successfully updated $updatedCount products');
+    } catch (e) {
+      print('❌ Error in syncStoreProductsByIds: $e');
     }
   }
 }
@@ -180,6 +265,7 @@ class SearchResult {
   SearchResult(this.document, this.score);
 }
 
+// Alternative: Create a standalone function if you prefer
 Future<void> syncStoreProductsByIds(
   BuildContext context,
   String storeId,
@@ -243,5 +329,7 @@ Future<void> syncStoreProductsByIds(
     await batch.commit();
 
     print('✅ Successfully updated $updatedCount products');
-  } catch (e) {}
+  } catch (e) {
+    print('❌ Error in syncStoreProductsByIds: $e');
+  }
 }

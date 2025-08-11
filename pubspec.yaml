@@ -37,6 +37,7 @@ dependencies:
   firebase_app_check: ^0.4.0
   firebase_auth: ^6.0.0
   firebase_core: ^4.0.0
+  firebase_core_web: ^3.0.0
   firebase_messaging: ^16.0.0
   firebase_storage: ^13.0.0
   flutter:
@@ -96,12 +97,17 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
-flutter_icons:
+flutter_launcher_icons:
   android: true
+  ios: true
   image_path: "assets/images/app_icon.png"
 
 flutter_native_splash:
   color: "#ffffff"
   image: assets/images/screen.png
   android: true
-  ios: false
+  ios: true
+  windows: true
+  macos: true
+  web: true
+  linux: true

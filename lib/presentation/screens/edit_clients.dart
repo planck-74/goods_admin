@@ -106,7 +106,7 @@ class _EditClientsState extends State<EditClients> {
                                       child: Text(
                                         'لا يوجد عملاء',
                                         style: TextStyle(
-                                            color: kDarkBlueColor,
+                                            color: darkBlueColor,
                                             fontSize: 20,
                                             fontWeight: FontWeight.bold),
                                       ),
@@ -140,7 +140,7 @@ class _EditClientsState extends State<EditClients> {
         style: const TextStyle(fontSize: 16),
         decoration: const InputDecoration(
           hintText: 'ابحث عن عميل',
-          hintStyle: TextStyle(color: kDarkBlueColor, fontSize: 14),
+          hintStyle: TextStyle(color: darkBlueColor, fontSize: 14),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(10)),
           ),

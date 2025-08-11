@@ -207,7 +207,7 @@ class _BatchEditDialogState extends State<BatchEditDialog> {
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor: AlwaysStoppedAnimation<Color>(darkBlueColor),
                   ),
                 )
               : const Text('تحديث', style: TextStyle(color: Colors.white)),

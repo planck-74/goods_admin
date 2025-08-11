@@ -19,5 +19,6 @@
             "titleBar.inactiveForeground": "#15202b99"
       },
       "peacock.color": "#f9e64f",
-      "files.autoSave": "onFocusChange"
+      "files.autoSave": "onFocusChange",
+      "cmake.sourceDirectory": "C:/goods/goods_admin/windows/flutter"
 }

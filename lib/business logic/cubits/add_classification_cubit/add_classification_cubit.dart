@@ -1,6 +1,6 @@
-import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods_admin/presentation/custom_widgets/snack_bar.dart';
 
 part 'add_classification_state.dart';

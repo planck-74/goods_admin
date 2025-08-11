@@ -20,7 +20,7 @@ Widget customContainer({
           width: screenWidth * 0.98,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [kDarkBlueColor, kDarkBlueColor.withOpacity(0.8)],
+              colors: [darkBlueColor, darkBlueColor.withOpacity(0.8)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),

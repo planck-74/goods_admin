@@ -1,6 +1,8 @@
 import 'dart:io';
-import 'dart:typed_data';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:goods_admin/presentation/dialogs/batch_edit_dialog.dart';
+import 'package:goods_admin/presentation/screens/custom_image_cropper.dart';
 import 'package:goods_admin/presentation/sheets/edit_products_sheet.dart';
 import 'package:goods_admin/services/storage_services.dart';
 import 'package:image/image.dart' as img;
@@ -170,38 +172,53 @@ Future<File?> pickAndCropImage(BuildContext context) async {
 
     if (pickedFile == null) return null;
 
-    final croppedFile = await ImageCropper().cropImage(
-      sourcePath: pickedFile.path,
-      compressFormat: ImageCompressFormat.png,
-      compressQuality: 95, // Slightly reduced for speed
-      maxWidth: 800, // Add max dimensions to cropper
-      maxHeight: 800,
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'اقتصاص الصورة',
-          toolbarColor: Colors.blue, // Replace with your primaryColor
-          toolbarWidgetColor: Colors.white,
-          initAspectRatio: CropAspectRatioPreset.original,
-          lockAspectRatio: false,
-          aspectRatioPresets: [
-            CropAspectRatioPreset.original,
-            CropAspectRatioPreset.square,
-            CropAspectRatioPreset.ratio3x2,
-            CropAspectRatioPreset.ratio4x3,
-            CropAspectRatioPreset.ratio16x9
-          ],
+    // Check if we're on Windows, Web, or Linux where image_cropper might not work
+    if (Platform.isWindows || Platform.isLinux || kIsWeb) {
+      // Use custom cropper
+      final croppedFile = await Navigator.of(context).push<File>(
+        MaterialPageRoute(
+          builder: (context) => CustomImageCropper(
+            imageFile: File(pickedFile.path),
+            title: 'اقتصاص الصورة',
+          ),
         ),
-        IOSUiSettings(
-          title: 'اقتصاص الصورة',
-          aspectRatioLockEnabled: false,
-          resetAspectRatioEnabled: true,
-          aspectRatioPickerButtonHidden: false,
-          aspectRatioLockDimensionSwapEnabled: true,
-        ),
-      ],
-    );
+      );
+      return croppedFile;
+    } else {
+      // Use original image_cropper for mobile platforms
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: pickedFile.path,
+        compressFormat: ImageCompressFormat.png,
+        compressQuality: 95,
+        maxWidth: 800,
+        maxHeight: 800,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'اقتصاص الصورة',
+            toolbarColor: primaryColor, // Replace with your primaryColor
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: false,
+            aspectRatioPresets: [
+              CropAspectRatioPreset.original,
+              CropAspectRatioPreset.square,
+              CropAspectRatioPreset.ratio3x2,
+              CropAspectRatioPreset.ratio4x3,
+              CropAspectRatioPreset.ratio16x9
+            ],
+          ),
+          IOSUiSettings(
+            title: 'اقتصاص الصورة',
+            aspectRatioLockEnabled: false,
+            resetAspectRatioEnabled: true,
+            aspectRatioPickerButtonHidden: false,
+            aspectRatioLockDimensionSwapEnabled: true,
+          ),
+        ],
+      );
 
-    return croppedFile != null ? File(croppedFile.path) : null;
+      return croppedFile != null ? File(croppedFile.path) : null;
+    }
   } catch (e) {
     debugPrint("Error picking/cropping image: $e");
     return null;
@@ -247,48 +264,66 @@ Future<File?> cropExistingImage(BuildContext context, String imageUrl) async {
 
     debugPrint("Image downloaded successfully, starting cropper...");
 
-    // Optimized cropper settings
-    final croppedFile = await ImageCropper().cropImage(
-      sourcePath: imageFile.path,
-      compressFormat: ImageCompressFormat.png,
-      compressQuality: 95,
-      maxWidth: 800,
-      maxHeight: 800,
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'اقتصاص الصورة الحالية',
-          toolbarColor: Colors.blue, // Replace with primaryColor
-          toolbarWidgetColor: Colors.white,
-          initAspectRatio: CropAspectRatioPreset.original,
-          lockAspectRatio: false,
-          activeControlsWidgetColor: Colors.blue, // Replace with primaryColor
-          backgroundColor: Colors.white,
-          aspectRatioPresets: [
-            CropAspectRatioPreset.original,
-            CropAspectRatioPreset.square,
-            CropAspectRatioPreset.ratio3x2,
-            CropAspectRatioPreset.ratio4x3,
-            CropAspectRatioPreset.ratio16x9
-          ],
-        ),
-        IOSUiSettings(
-          title: 'اقتصاص الصورة الحالية',
-          aspectRatioLockEnabled: false,
-          resetAspectRatioEnabled: true,
-          aspectRatioPickerButtonHidden: false,
-          aspectRatioLockDimensionSwapEnabled: true,
-        ),
-      ],
-    );
+    File? croppedFile;
 
-    // Clean up
+    // Check platform and use appropriate cropper
+    if (Platform.isWindows || Platform.isLinux || kIsWeb) {
+      // Use custom cropper for Windows/Linux/Web
+      croppedFile = await Navigator.of(context).push<File>(
+        MaterialPageRoute(
+          builder: (context) => CustomImageCropper(
+            imageFile: imageFile,
+            title: 'اقتصاص الصورة الحالية',
+          ),
+        ),
+      );
+    } else {
+      // Use original image_cropper for mobile platforms
+      final croppedResult = await ImageCropper().cropImage(
+        sourcePath: imageFile.path,
+        compressFormat: ImageCompressFormat.png,
+        compressQuality: 95,
+        maxWidth: 800,
+        maxHeight: 800,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'اقتصاص الصورة الحالية',
+            toolbarColor: primaryColor, // Replace with primaryColor
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: false,
+            activeControlsWidgetColor:
+                primaryColor, // Replace with primaryColor
+            backgroundColor: Colors.white,
+            aspectRatioPresets: [
+              CropAspectRatioPreset.original,
+              CropAspectRatioPreset.square,
+              CropAspectRatioPreset.ratio3x2,
+              CropAspectRatioPreset.ratio4x3,
+              CropAspectRatioPreset.ratio16x9
+            ],
+          ),
+          IOSUiSettings(
+            title: 'اقتصاص الصورة الحالية',
+            aspectRatioLockEnabled: false,
+            resetAspectRatioEnabled: true,
+            aspectRatioPickerButtonHidden: false,
+            aspectRatioLockDimensionSwapEnabled: true,
+          ),
+        ],
+      );
+
+      croppedFile = croppedResult != null ? File(croppedResult.path) : null;
+    }
+
+    // Clean up downloaded file
     try {
       await imageFile.delete();
     } catch (e) {
       debugPrint("Error deleting temp file: $e");
     }
 
-    return croppedFile != null ? File(croppedFile.path) : null;
+    return croppedFile;
   } catch (e) {
     debugPrint("Error in cropExistingImage: $e");
 
@@ -427,44 +462,10 @@ class _EditProductsState extends State<EditProducts> {
   @override
   void initState() {
     super.initState();
-    context.read<FetchProductsCubit>().fetchProducts();
-  }
-
-  Future<void> _searchProducts(String query) async {
-    if (query.isEmpty) {
-      setState(() {
-        _searchResults = null;
-        _isSearching = false;
-      });
-      return;
-    }
-
-    setState(() => _isSearching = true);
-
-    try {
-      List<QueryDocumentSnapshot> docs = await context
-          .read<FirestoreServicesCubit>()
-          .searchProductsByName(query);
-
-      List<Product> products = docs
-          .map((doc) => Product.fromMap(doc.data() as Map<String, dynamic>))
-          .toList();
-
-      setState(() {
-        _searchResults = products;
-        _isSearching = false;
-      });
-    } catch (e) {
-      setState(() => _isSearching = false);
-      debugPrint("Error searching products: $e");
-    }
-  }
-
-  Future<void> _refreshSearchResults() async {
-    if (_searchController.text.isNotEmpty) {
-      await _searchProducts(_searchController.text);
-    } else {
-      context.read<FetchProductsCubit>().fetchProducts();
+    // Only fetch if cache is empty
+    final fetchCubit = context.read<FetchProductsCubit>();
+    if (fetchCubit.cachedProducts.isEmpty) {
+      fetchCubit.fetchProducts();
     }
   }
 
@@ -472,16 +473,6 @@ class _EditProductsState extends State<EditProducts> {
     setState(() {
       _isBatchMode = !_isBatchMode;
       _selectedProductIds.clear();
-    });
-  }
-
-  void _toggleProductSelection(String productId) {
-    setState(() {
-      if (_selectedProductIds.contains(productId)) {
-        _selectedProductIds.remove(productId);
-      } else {
-        _selectedProductIds.add(productId);
-      }
     });
   }
 
@@ -509,40 +500,56 @@ class _EditProductsState extends State<EditProducts> {
             _selectedProductIds.clear();
             _isBatchMode = false;
           });
-          _refreshSearchResults();
+          _refreshSearchResults(forceRefetch: false);
         },
       ),
     );
   }
 
-  void _showDeleteConfirmationDialog(BuildContext context, Product product) {
+  Future<void> _showMultipleCropDialog() async {
+    if (_selectedProductIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('يرجى اختيار منتجات للتعديل'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Get selected products that have images
+    final allProducts = _searchResults ??
+        (context.read<FetchProductsCubit>().state is FetchProductsLoaded
+            ? (context.read<FetchProductsCubit>().state as FetchProductsLoaded)
+                .products
+            : <Product>[]);
+
+    final selectedProducts = allProducts
+        .where((p) =>
+            _selectedProductIds.contains(p.productId) && p.imageUrl.isNotEmpty)
+        .toList();
+
+    if (selectedProducts.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('لا توجد منتجات محددة تحتوي على صور'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('تأكيد الحذف'),
-        content: Text('هل أنت متأكد من حذف المنتج "${product.name}"؟'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('إلغاء'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              await context
-                  .read<FirestoreServicesCubit>()
-                  .deleteProduct(context, product);
-              await _refreshSearchResults();
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text('تم حذف المنتج "${product.name}" بنجاح')),
-                );
-              }
-            },
-            child: const Text('حذف', style: TextStyle(color: Colors.red)),
-          ),
-        ],
+      builder: (context) => MultipleCropDialog(
+        products: selectedProducts,
+        onComplete: () {
+          setState(() {
+            _selectedProductIds.clear();
+            _isBatchMode = false;
+          });
+          _refreshSearchResults(forceRefetch: false);
+        },
       ),
     );
   }
@@ -560,7 +567,7 @@ class _EditProductsState extends State<EditProducts> {
         style: const TextStyle(fontSize: 16),
         decoration: const InputDecoration(
           hintText: 'ابحث عن منتج',
-          hintStyle: TextStyle(color: kDarkBlueColor, fontSize: 14),
+          hintStyle: TextStyle(color: darkBlueColor, fontSize: 14),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(10)),
           ),
@@ -632,83 +639,14 @@ class _EditProductsState extends State<EditProducts> {
     );
   }
 
-  Future<void> _showMultipleCropDialog() async {
-    if (_selectedProductIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('يرجى اختيار منتجات للتعديل'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
-    // Get selected products that have images
-    final allProducts = _searchResults ??
-        (context.read<FetchProductsCubit>().state is FetchProductsLoaded
-            ? (context.read<FetchProductsCubit>().state as FetchProductsLoaded)
-                .products
-            : <Product>[]);
-
-    final selectedProducts = allProducts
-        .where((p) =>
-            _selectedProductIds.contains(p.productId) && p.imageUrl.isNotEmpty)
-        .toList();
-
-    if (selectedProducts.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('لا توجد منتجات محددة تحتوي على صور'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) => MultipleCropDialog(
-        products: selectedProducts,
-        onComplete: () {
-          setState(() {
-            _selectedProductIds.clear();
-            _isBatchMode = false;
-          });
-          _refreshSearchResults();
-        },
-      ),
-    );
-  }
-
-  Widget _buildProductList(List<Product> products) {
-    return Column(
-      children: [
-        _buildBatchModeHeader(products),
-        Expanded(
-          child: ListView.builder(
-            itemCount: products.length,
-            itemBuilder: (context, index) {
-              Product product = products[index];
-              bool isSelected = _selectedProductIds.contains(product.productId);
-
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 0),
-                child: GestureDetector(
-                  onTap: () {
-                    if (_isBatchMode) {
-                      _toggleProductSelection(product.productId);
-                    } else {
-                      showEditProductSheet(context, product);
-                    }
-                  },
-                  child: _buildProductCard(product, isSelected),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
+  void _toggleProductSelection(String productId) {
+    setState(() {
+      if (_selectedProductIds.contains(productId)) {
+        _selectedProductIds.remove(productId);
+      } else {
+        _selectedProductIds.add(productId);
+      }
+    });
   }
 
   Future<void> deleteOldImage(String imageUrl) async {
@@ -722,6 +660,176 @@ class _EditProductsState extends State<EditProducts> {
       debugPrint("Error deleting old image: $e");
       // Don't throw error - deletion failure shouldn't block the upload process
     }
+  }
+
+  Future<void> _searchProducts(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        _searchResults = null;
+        _isSearching = false;
+      });
+      return;
+    }
+
+    setState(() => _isSearching = true);
+
+    // Use cached search instead of Firestore query
+    final fetchCubit = context.read<FetchProductsCubit>();
+    final results = fetchCubit.searchInCachedProducts(query);
+
+    setState(() {
+      _searchResults = results;
+      _isSearching = false;
+    });
+  }
+
+  // Updated refresh method - only refetch when explicitly needed
+  Future<void> _refreshSearchResults({bool forceRefetch = false}) async {
+    if (forceRefetch) {
+      // Only refetch from Firestore when explicitly requested (like pull-to-refresh)
+      await context.read<FetchProductsCubit>().fetchProducts();
+    }
+
+    // Update search results with current cache
+    if (_searchController.text.isNotEmpty) {
+      await _searchProducts(_searchController.text);
+    }
+  }
+
+  // Image update method - optimized to update locally
+  Future<void> _updateProductImage(Product product, File newImage) async {
+    bool loadingShowing = false;
+
+    try {
+      loadingShowing = true;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (loadingContext) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Upload new image
+      String? newImageUrl = await uploadImage(newImage, product.productId);
+
+      if (newImageUrl != null) {
+        if (product.imageUrl.isNotEmpty) {
+          await deleteOldImage(product.imageUrl);
+        }
+
+        // Create updated product
+        Product updatedProduct = Product(
+          name: product.name,
+          manufacturer: product.manufacturer,
+          size: product.size,
+          package: product.package,
+          classification: product.classification,
+          note: product.note,
+          salesCount: product.salesCount,
+          imageUrl: newImageUrl,
+          productId: product.productId,
+        );
+
+        // Update in Firestore and local cache
+        if (context.mounted) {
+          context
+              .read<FirestoreServicesCubit>()
+              .updateProduct(context, updatedProduct);
+        }
+
+        // Update search results if active
+        if (_searchResults != null) {
+          setState(() {
+            _searchResults = _searchResults!.map((p) {
+              if (p.productId == product.productId) {
+                return updatedProduct;
+              }
+              return p;
+            }).toList();
+          });
+        }
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('تم تحديث الصورة بنجاح'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('فشل في رفع الصورة'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("Error updating image: $e");
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('حدث خطأ: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (loadingShowing && context.mounted) {
+        try {
+          Navigator.of(context).pop();
+        } catch (e) {
+          debugPrint("Error closing loading dialog: $e");
+        }
+      }
+    }
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context, Product product) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('تأكيد الحذف'),
+        content: Text('هل أنت متأكد من حذف المنتج "${product.name}"؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+
+              // Delete from Firestore and update local cache
+              await context
+                  .read<FirestoreServicesCubit>()
+                  .deleteProduct(context, product);
+
+              // Update search results if active
+              if (_searchResults != null) {
+                setState(() {
+                  _searchResults = _searchResults!
+                      .where((p) => p.productId != product.productId)
+                      .toList();
+                });
+              }
+
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text('تم حذف المنتج "${product.name}" بنجاح')),
+                );
+              }
+            },
+            child: const Text('حذف', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildProductCard(Product product, bool isSelected) {
@@ -751,94 +859,10 @@ class _EditProductsState extends State<EditProducts> {
           GestureDetector(
             onTap: () async {
               if (!_isBatchMode && context.mounted) {
-                // Show image options dialog when tapping the image
                 await showImageOptionsDialog(context, product.imageUrl,
                     (File? newImage) async {
                   if (newImage != null && context.mounted) {
-                    // Create a loading dialog context
-                    bool loadingShowing = false;
-
-                    try {
-                      // Show loading
-                      loadingShowing = true;
-                      showDialog(
-                        context: context,
-                        barrierDismissible: false,
-                        builder: (loadingContext) => const Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      );
-
-                      // Upload new image with transparency preservation
-                      String? newImageUrl =
-                          await uploadImage(newImage, product.productId);
-
-                      if (newImageUrl != null) {
-                        if (product.imageUrl.isNotEmpty) {
-                          await deleteOldImage(product.imageUrl);
-                        }
-
-                        // Update product with new image URL
-                        Product updatedProduct = Product(
-                          name: product.name,
-                          manufacturer: product.manufacturer,
-                          size: product.size,
-                          package: product.package,
-                          classification: product.classification,
-                          note: product.note,
-                          salesCount: product.salesCount,
-                          imageUrl: newImageUrl,
-                          productId: product.productId,
-                        );
-
-                        // Update in Firestore
-                        if (context.mounted) {
-                          context
-                              .read<FirestoreServicesCubit>()
-                              .updateProduct(context, updatedProduct);
-                        }
-
-                        // Refresh the list
-                        await _refreshSearchResults();
-
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('تم تحديث الصورة بنجاح'),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
-                        }
-                      } else {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('فشل في رفع الصورة'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      }
-                    } catch (e) {
-                      debugPrint("Error updating image: $e");
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('حدث خطأ: $e'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    } finally {
-                      // Hide loading safely
-                      if (loadingShowing && context.mounted) {
-                        try {
-                          Navigator.of(context).pop();
-                        } catch (e) {
-                          debugPrint("Error closing loading dialog: $e");
-                        }
-                      }
-                    }
+                    await _updateProductImage(product, newImage);
                   }
                 });
               }
@@ -848,10 +872,15 @@ class _EditProductsState extends State<EditProducts> {
               width: 100,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  product.imageUrl,
+                child: CachedNetworkImage(
+                  imageUrl: product.imageUrl,
                   fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => Container(
+                  placeholder: (context, url) => Container(
+                    color: Colors.grey[200],
+                    child: const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2)),
+                  ),
+                  errorWidget: (context, url, error) => Container(
                     color: Colors.grey[300],
                     child: const Icon(Icons.image_not_supported),
                   ),
@@ -861,7 +890,7 @@ class _EditProductsState extends State<EditProducts> {
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Container(height: 120, width: 1, color: kDarkBlueColor),
+            child: Container(height: 120, width: 1, color: darkBlueColor),
           ),
           Expanded(child: _buildProductDetails(product)),
           if (!_isBatchMode)
@@ -903,6 +932,37 @@ class _EditProductsState extends State<EditProducts> {
     );
   }
 
+  Widget _buildProductList(List<Product> products) {
+    return Column(
+      children: [
+        _buildBatchModeHeader(products),
+        Expanded(
+          child: ListView.builder(
+            itemCount: products.length,
+            itemBuilder: (context, index) {
+              Product product = products[index];
+              bool isSelected = _selectedProductIds.contains(product.productId);
+
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 0),
+                child: GestureDetector(
+                  onTap: () {
+                    if (_isBatchMode) {
+                      _toggleProductSelection(product.productId);
+                    } else {
+                      showEditProductSheet(context, product);
+                    }
+                  },
+                  child: _buildProductCard(product, isSelected),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -927,7 +987,7 @@ class _EditProductsState extends State<EditProducts> {
           ? const Center(child: CircularProgressIndicator())
           : _searchResults != null
               ? RefreshIndicator(
-                  onRefresh: _refreshSearchResults,
+                  onRefresh: () => _refreshSearchResults(forceRefetch: true),
                   child: _buildProductList(_searchResults!),
                 )
               : BlocBuilder<FetchProductsCubit, FetchProductsState>(
@@ -938,7 +998,8 @@ class _EditProductsState extends State<EditProducts> {
                       );
                     } else if (state is FetchProductsLoaded) {
                       return RefreshIndicator(
-                        onRefresh: _refreshSearchResults,
+                        onRefresh: () =>
+                            _refreshSearchResults(forceRefetch: true),
                         child: _buildProductList(state.products),
                       );
                     } else if (state is FetchProductsError) {
@@ -1175,39 +1236,57 @@ Future<File?> cropExistingImageForBatch(
 
     debugPrint("Image downloaded for $productName, starting cropper...");
 
-    // Show product name in cropper title
-    final croppedFile = await ImageCropper().cropImage(
-      sourcePath: imageFile.path,
-      compressFormat: ImageCompressFormat.png,
-      compressQuality: 95,
-      maxWidth: 800,
-      maxHeight: 800,
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'اقتصاص: $productName',
-          toolbarColor: primaryColor,
-          toolbarWidgetColor: Colors.white,
-          initAspectRatio: CropAspectRatioPreset.original,
-          lockAspectRatio: false,
-          activeControlsWidgetColor: primaryColor,
-          backgroundColor: Colors.white,
-          aspectRatioPresets: [
-            CropAspectRatioPreset.original,
-            CropAspectRatioPreset.square,
-            CropAspectRatioPreset.ratio3x2,
-            CropAspectRatioPreset.ratio4x3,
-            CropAspectRatioPreset.ratio16x9
-          ],
+    File? croppedFile;
+
+    // Check platform and use appropriate cropper
+    if (Platform.isWindows || Platform.isLinux || kIsWeb) {
+      // Use custom cropper for Windows/Linux/Web
+      croppedFile = await Navigator.of(context).push<File>(
+        MaterialPageRoute(
+          builder: (context) => CustomImageCropper(
+            imageFile: imageFile,
+            title: 'اقتصاص: $productName',
+          ),
         ),
-        IOSUiSettings(
-          title: 'اقتصاص: $productName',
-          aspectRatioLockEnabled: false,
-          resetAspectRatioEnabled: true,
-          aspectRatioPickerButtonHidden: false,
-          aspectRatioLockDimensionSwapEnabled: true,
-        ),
-      ],
-    );
+      );
+    } else {
+      // Use original image_cropper for mobile platforms
+      final croppedResult = await ImageCropper().cropImage(
+        sourcePath: imageFile.path,
+        compressFormat: ImageCompressFormat.png,
+        compressQuality: 95,
+        maxWidth: 800,
+        maxHeight: 800,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'اقتصاص: $productName',
+            toolbarColor: primaryColor, // Replace with primaryColor
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: false,
+            activeControlsWidgetColor:
+                primaryColor, // Replace with primaryColor
+            backgroundColor: Colors.white,
+            aspectRatioPresets: [
+              CropAspectRatioPreset.original,
+              CropAspectRatioPreset.square,
+              CropAspectRatioPreset.ratio3x2,
+              CropAspectRatioPreset.ratio4x3,
+              CropAspectRatioPreset.ratio16x9
+            ],
+          ),
+          IOSUiSettings(
+            title: 'اقتصاص: $productName',
+            aspectRatioLockEnabled: false,
+            resetAspectRatioEnabled: true,
+            aspectRatioPickerButtonHidden: false,
+            aspectRatioLockDimensionSwapEnabled: true,
+          ),
+        ],
+      );
+
+      croppedFile = croppedResult != null ? File(croppedResult.path) : null;
+    }
 
     // Clean up
     try {
@@ -1216,7 +1295,7 @@ Future<File?> cropExistingImageForBatch(
       debugPrint("Error deleting temp file: $e");
     }
 
-    return croppedFile != null ? File(croppedFile.path) : null;
+    return croppedFile;
   } catch (e) {
     debugPrint("Error in cropExistingImageForBatch for $productName: $e");
     return null;

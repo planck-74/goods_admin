@@ -181,7 +181,7 @@ class ImageHelperUtils {
             activeControlsWidgetColor: primaryColor,
             initAspectRatio: CropAspectRatioPreset.square,
             lockAspectRatio: true,
-            statusBarColor: kDarkBlueColor,
+            statusBarColor: darkBlueColor,
             cropGridColor: primaryColor.withOpacity(0.5),
             cropFrameColor: primaryColor,
             showCropGrid: true,

@@ -8,25 +8,6 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:267612126842:android:fe3b6f14f63aed79fbc5c3",
-        "android_client_info": {
-          "package_name": "com.example.goods_admin"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyDwmoR8ocO6rXPuxwyU0yOQZmc_a0Nd3H4"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
         "mobilesdk_app_id": "1:267612126842:android:172d2d2c0ac8d879fbc5c3",
         "android_client_info": {
           "package_name": "com.planck.goodsadmins"

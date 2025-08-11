@@ -26,7 +26,6 @@ void showEditProductSheet(BuildContext context, Product product) {
 
   // Load classifications data first
   context.read<GetClassificationsCubit>().getProductsClassifications();
-
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -104,11 +103,8 @@ void showEditProductSheet(BuildContext context, Product product) {
                       builder: (context, state) {
                         if (state is GetClassificationsSuccess) {
                           final cubit = context.read<GetClassificationsCubit>();
-
-                          // Find current classification value or set it initially
                           selectedClassification ??= product.classification;
 
-                          // Ensure the current value exists in the dropdown options
                           String? validInitialSelection;
                           final classificationExists = cubit
                               .classification.values
@@ -148,9 +144,7 @@ void showEditProductSheet(BuildContext context, Product product) {
                         if (state is GetClassificationsSuccess) {
                           final cubit = context.read<GetClassificationsCubit>();
 
-                          // Find current manufacturer key or set it initially
                           if (selectedManufacturer == null) {
-                            // Find the key for current manufacturer value
                             final manufacturerEntry = cubit.manufacturer.entries
                                 .where((entry) =>
                                     entry.key == product.manufacturer ||
@@ -159,7 +153,6 @@ void showEditProductSheet(BuildContext context, Product product) {
                             selectedManufacturer = manufacturerEntry?.key;
                           }
 
-                          // Ensure the current value exists in the dropdown options
                           String? validInitialSelection;
                           if (selectedManufacturer != null &&
                               cubit.manufacturer
@@ -216,10 +209,8 @@ void showEditProductSheet(BuildContext context, Product product) {
                           onPressed: () async {
                             // Upload new image if selected
                             if (selectedImage != null) {
-                              final fileName = product
-                                  .productId; // Use productId for consistency
+                              final fileName = product.productId;
 
-                              // Delete old image if exists and has valid URL
                               if (product.imageUrl.isNotEmpty &&
                                   product.imageUrl.contains('firebase')) {
                                 try {
@@ -227,13 +218,10 @@ void showEditProductSheet(BuildContext context, Product product) {
                                       .deleteOldImage(product.imageUrl);
                                   print('Old image deleted successfully');
                                 } catch (e) {
-                                  print(
-                                      'Error deleting old image (might not exist): $e');
-                                  // Continue anyway - it's not critical if old image doesn't exist
+                                  print('Error deleting old image: $e');
                                 }
                               }
 
-                              // Upload new image
                               try {
                                 updatedImageUrl = await StorageService()
                                     .uploadImage(
@@ -247,7 +235,7 @@ void showEditProductSheet(BuildContext context, Product product) {
                                     backgroundColor: Colors.red,
                                   ),
                                 );
-                                return; // Don't continue if upload failed
+                                return;
                               }
                             }
 
@@ -258,12 +246,12 @@ void showEditProductSheet(BuildContext context, Product product) {
                               package: packageController.text,
                               classification: selectedClassification ?? '',
                               note: noteController.text,
-                              salesCount: product
-                                  .salesCount, // Keep original sales count
+                              salesCount: product.salesCount,
                               imageUrl: updatedImageUrl ?? product.imageUrl,
                               productId: product.productId,
                             );
 
+                            // This will now update local cache instead of refetching
                             context
                                 .read<FirestoreServicesCubit>()
                                 .updateProduct(context, updatedProduct);
@@ -346,19 +334,6 @@ void showEditProductSheet(BuildContext context, Product product) {
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: primaryColor),
-                ),
-              ),
-            ),
-
-            // Info text about image editing
-            const Positioned(
-              top: -30,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Text(
-                  "اضغط على الصورة لتعديلها",
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ),
             ),
