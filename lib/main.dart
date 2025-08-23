@@ -48,7 +48,7 @@ class GoodsAdmin extends StatelessWidget {
         ],
         home: const AuthCheck(),
       ),
-    );
+    ); 
   }
 }
 
@@ -57,6 +57,10 @@ class AuthCheck extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (Platform.isWindows) {
+      return const Home();
+    }
+
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {

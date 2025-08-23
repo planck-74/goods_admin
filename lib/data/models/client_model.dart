@@ -5,26 +5,34 @@ class ClientModel {
   final String businessName;
   final String category;
   final String imageUrl;
-  final String address;
+  final String addressTyped;
   final String phoneNumber;
   final String secondPhoneNumber;
-  final GeoPoint geoPoint;
+  final GeoPoint geoLocation;
   final bool isProfileComplete;
   final double totalSavings;
   final double totalPayments;
+
+  // New fields
+  final String government;
+  final String town;
+  final String area;
 
   ClientModel({
     required this.uid,
     required this.businessName,
     required this.category,
     required this.imageUrl,
-    required this.address,
+    required this.addressTyped,
     required this.phoneNumber,
     required this.secondPhoneNumber,
-    required this.geoPoint,
+    required this.geoLocation,
     required this.isProfileComplete,
     required this.totalSavings,
     required this.totalPayments,
+    required this.government,
+    required this.town,
+    required this.area,
   });
 
   factory ClientModel.fromMap(Map<String, dynamic> map) {
@@ -33,13 +41,20 @@ class ClientModel {
       businessName: map['businessName'] ?? '',
       category: map['category'] ?? '',
       imageUrl: map['imageUrl'] ?? '',
-      address: map['address'] ?? '',
+      addressTyped: map['addressTyped'] ?? '',
       phoneNumber: map['phoneNumber'] ?? '',
       secondPhoneNumber: map['secondPhoneNumber'] ?? '',
-      geoPoint: map['geoPoint'] ?? const GeoPoint(0, 0),
+      geoLocation: map['geoLocation'] ?? const GeoPoint(0, 0),
       isProfileComplete: map['isProfileComplete'] ?? false,
-      totalSavings: map['totalSavings']?.toDouble() ?? 0.0,
-      totalPayments: map['totalPayments']?.toDouble() ?? 0.0,
+      totalSavings: (map['totalSavings'] != null)
+          ? (map['totalSavings'] as num).toDouble()
+          : 0.0,
+      totalPayments: (map['totalPayments'] != null)
+          ? (map['totalPayments'] as num).toDouble()
+          : 0.0,
+      government: map['government'] ?? '',
+      town: map['town'] ?? '',
+      area: map['area'] ?? '',
     );
   }
 
@@ -54,13 +69,16 @@ class ClientModel {
       'businessName': businessName,
       'category': category,
       'imageUrl': imageUrl,
-      'address': address,
+      'addressTyped': addressTyped,
       'phoneNumber': phoneNumber,
       'secondPhoneNumber': secondPhoneNumber,
-      'geoPoint': geoPoint,
+      'geoLocation': geoLocation,
       'isProfileComplete': isProfileComplete,
       'totalSavings': totalSavings,
       'totalPayments': totalPayments,
+      'government': government,
+      'town': town,
+      'area': area,
     };
   }
 }
