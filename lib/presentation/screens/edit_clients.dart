@@ -37,21 +37,30 @@ class _EditClientsState extends State<EditClients> {
       });
       return;
     }
+
     setState(() {
       _isSearching = true;
     });
 
     try {
-      List<QueryDocumentSnapshot> docs =
-          await context.read<GetClientDataCubit>().searchClientsByName(query);
+      // Use the comprehensive search method
+      List<QueryDocumentSnapshot> docs = await context
+          .read<GetClientDataCubit>()
+          .searchClientsComprehensive(query);
 
       List<ClientModel> clients = docs
           .map((doc) => ClientModel.fromMap(doc.data() as Map<String, dynamic>))
           .where(_shouldDisplayClient)
           .toList();
 
+      // Remove duplicates if any (in case of multiple matches)
+      Map<String, ClientModel> uniqueClients = {};
+      for (ClientModel client in clients) {
+        uniqueClients[client.uid] = client;
+      }
+
       setState(() {
-        _searchResults = clients;
+        _searchResults = uniqueClients.values.toList();
         _isSearching = false;
       });
     } catch (e) {
@@ -59,6 +68,9 @@ class _EditClientsState extends State<EditClients> {
         _isSearching = false;
       });
       debugPrint("Error searching clients: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('خطأ في البحث: $e')),
+      );
     }
   }
 
@@ -233,8 +245,8 @@ class _EditClientsState extends State<EditClients> {
         cursorHeight: 25,
         style: const TextStyle(fontSize: 16),
         decoration: const InputDecoration(
-          hintText: 'ابحث عن عميل',
-          hintStyle: TextStyle(color: darkBlueColor, fontSize: 14),
+          hintText: 'ابحث بالاسم، الهاتف، المنطقة، الفئة...', // Updated hint
+          hintStyle: TextStyle(color: darkBlueColor, fontSize: 12),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(10)),
           ),
