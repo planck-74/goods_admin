@@ -7,14 +7,14 @@ import 'package:goods_admin/data/global/theme/theme_data.dart';
 import 'package:goods_admin/presentation/custom_widgets/custom_app_bar%20copy.dart';
 import 'package:goods_admin/presentation/custom_widgets/custom_container.dart';
 
-class Home extends StatefulWidget {
-  const Home({super.key});
+class ProductsManagement extends StatefulWidget {
+  const ProductsManagement({super.key});
 
   @override
-  State<Home> createState() => _HomeState();
+  State<ProductsManagement> createState() => _ProductsManagementState();
 }
 
-class _HomeState extends State<Home> {
+class _ProductsManagementState extends State<ProductsManagement> {
   @override
   initState() {
     super.initState();
@@ -31,16 +31,7 @@ class _HomeState extends State<Home> {
         context,
         Row(
           children: [
-            GestureDetector(
-              onTap: () async {},
-              child: const Text('إدارة تطبيقات بضائع',
-                  style: TextStyle(color: whiteColor)),
-            ),
-            const Spacer(),
-            IconButton(
-              onPressed: () => _signOut(context),
-              icon: const Icon(Icons.exit_to_app_sharp),
-            ),
+            const Text('إدارة المنتجات', style: TextStyle(color: whiteColor)),
           ],
         ),
       ),
@@ -56,38 +47,20 @@ class _HomeState extends State<Home> {
               _buildCustomContainer(
                 context: context,
                 screenWidth: screenWidth,
-                text: 'إدارة المنتجات',
-                routeName: '/ProductsManagement',
+                text: 'إضافة منتج',
+                routeName: '/AddProduct',
               ),
               _buildCustomContainer(
                 context: context,
                 screenWidth: screenWidth,
-                text: 'إدارة العملاء',
-                routeName: '/EditClients',
-              ),
-              _buildCustomContainer(
-                context: context,
-                screenWidth: screenWidth,
-                text: 'إدارة المواقع',
-                routeName: '/AddLocation',
-              ),
-              _buildCustomContainer(
-                context: context,
-                screenWidth: screenWidth,
-                text: 'إدارة البانر دعائي',
-                routeName: '/CarouselAdminScreen',
+                text: 'تعديل المنتجات',
+                routeName: '/EditProducts',
               ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  void _signOut(BuildContext context) {
-    FirebaseAuth.instance.signOut().then((_) {
-      Navigator.pushReplacementNamed(context, '/SignIn');
-    });
   }
 
   Widget _buildCustomContainer({

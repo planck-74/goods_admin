@@ -19,7 +19,7 @@ ThemeData getThemeData() {
     secondaryHeaderColor: darkBlueColor,
     hoverColor: whiteColor,
     appBarTheme: const AppBarTheme(
-      color: primaryColor,
+      backgroundColor: primaryColor,
       iconTheme: IconThemeData(color: whiteColor),
     ),
     buttonTheme: const ButtonThemeData(

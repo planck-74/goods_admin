@@ -76,9 +76,7 @@ class _EditClientsState extends State<EditClients> {
 
   bool _shouldDisplayClient(ClientModel client) {
     // Don't display clients without name or phone number
-    if (client.businessName.isEmpty ||
-        client.phoneNumber.isEmpty ||
-        client.phoneNumber == null) {
+    if (client.businessName.isEmpty || client.phoneNumber.isEmpty) {
       return false;
     }
     return true;
@@ -411,7 +409,7 @@ class _ClientDetailsDialogState extends State<ClientDetailsDialog> {
     _townController = TextEditingController(text: widget.client.town);
     _areaController = TextEditingController(text: widget.client.area);
     _addressTypedController =
-        TextEditingController(text: widget.client.addressTyped ?? '');
+        TextEditingController(text: widget.client.addressTyped);
   }
 
   Future<void> _pickImage() async {

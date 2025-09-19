@@ -11,6 +11,7 @@ import 'package:goods_admin/presentation/screens/edit_clients.dart';
 import 'package:goods_admin/presentation/screens/edit_products.dart';
 import 'package:goods_admin/presentation/screens/edit_products_classification.dart';
 import 'package:goods_admin/presentation/screens/home.dart';
+import 'package:goods_admin/presentation/screens/products_management.dart';
 
 final Map<String, WidgetBuilder> routes = {
   '/SignIn': (context) => const SignIn(),
@@ -26,4 +27,5 @@ final Map<String, WidgetBuilder> routes = {
   '/AddArea': (context) => const AddArea(),
   '/Locations': (context) => const Locations(),
   '/CarouselAdminScreen': (context) => const CarouselAdminScreen(),
+  '/ProductsManagement': (context) => const ProductsManagement(),
 };

@@ -15,9 +15,37 @@ class GetClientDataCubit extends Cubit<GetClientDataState> {
       QuerySnapshot<Map<String, dynamic>> documentSnapshot =
           await FirebaseFirestore.instance.collection('clients').get();
 
-      List<ClientModel> clients = documentSnapshot.docs
-          .map((e) => ClientModel.fromMap(e.data()))
+      // Pair each doc's data with a parsed DateTime (or null)
+      final List<Map<String, dynamic>> docsWithDates =
+          documentSnapshot.docs.map((doc) {
+        final data = doc.data();
+        final dynamic ts = data['dateCreated'];
+
+        DateTime? parsed;
+        if (ts is Timestamp)
+          parsed = ts.toDate();
+        else if (ts is int)
+          parsed = DateTime.fromMillisecondsSinceEpoch(ts);
+        else if (ts is String) parsed = DateTime.tryParse(ts);
+
+        return {'data': data, 'date': parsed};
+      }).toList();
+
+      // Sort: put documents with a date first, ordered newest -> oldest. Null dates go last.
+      docsWithDates.sort((a, b) {
+        final DateTime? da = a['date'] as DateTime?;
+        final DateTime? db = b['date'] as DateTime?;
+        if (da == null && db == null) return 0;
+        if (da == null) return 1; // a after b
+        if (db == null) return -1; // a before b
+        return db.compareTo(da); // descending (newest first)
+      });
+
+      // Map to ClientModel in the sorted order
+      final List<ClientModel> clients = docsWithDates
+          .map((e) => ClientModel.fromMap(e['data'] as Map<String, dynamic>))
           .toList();
+
       emit(GetClientDataSuccess(clients));
     } catch (e) {
       emit(GetClientDataError(e.toString()));

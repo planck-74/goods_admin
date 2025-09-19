@@ -10,7 +10,7 @@ import 'package:goods_admin/data/global/theme/theme_data.dart';
 import 'package:goods_admin/firebase_options.dart';
 import 'package:goods_admin/presentation/screens/auth_screens/sign_in.dart';
 import 'package:goods_admin/presentation/screens/home.dart';
-
+import 'package:goods_admin/services/fcm_service.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 
@@ -22,6 +22,9 @@ void main() async {
     await FirebaseAppCheck.instance.activate(
       androidProvider: AndroidProvider.playIntegrity,
     );
+
+    // Initialize FCM Token Service
+    await FCMTokenService.initialize();
   }
 
   runApp(const GoodsAdmin());
@@ -48,12 +51,34 @@ class GoodsAdmin extends StatelessWidget {
         ],
         home: const AuthCheck(),
       ),
-    ); 
+    );
   }
 }
 
-class AuthCheck extends StatelessWidget {
+class AuthCheck extends StatefulWidget {
   const AuthCheck({super.key});
+
+  @override
+  State<AuthCheck> createState() => _AuthCheckState();
+}
+
+class _AuthCheckState extends State<AuthCheck> {
+  @override
+  void initState() {
+    super.initState();
+    _initializeFCMIfNeeded();
+  }
+
+  Future<void> _initializeFCMIfNeeded() async {
+    // Initialize FCM if not on Windows/Web and user is authenticated
+    if (!Platform.isWindows && !kIsWeb) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        // Re-initialize FCM service when user is authenticated
+        await FCMTokenService.initialize();
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +98,8 @@ class AuthCheck extends StatelessWidget {
     if (snapshot.connectionState == ConnectionState.waiting) {
       return const Center(child: CircularProgressIndicator());
     } else if (snapshot.hasData) {
+      // User is authenticated, ensure FCM is initialized
+      _initializeFCMIfNeeded();
       return const Home();
     } else {
       return const SignIn();
