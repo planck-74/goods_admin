@@ -43,7 +43,8 @@ class GetClientDataCubit extends Cubit<GetClientDataState> {
 
       // Map to ClientModel in the sorted order
       final List<ClientModel> clients = docsWithDates
-          .map((e) => ClientModel.fromMap(e['data'] as Map<String, dynamic>))
+          .map((e) =>
+              ClientModel.fromMap(e['data'] as DocumentSnapshot<Object?>))
           .toList();
 
       emit(GetClientDataSuccess(clients));

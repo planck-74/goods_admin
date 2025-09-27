@@ -1,9 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:goods_admin/business%20logic/cubits/carousel_cubit/carousel_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/fetch_products/fetch_products_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/get_classifications/get_classifications_cubit.dart';
+import 'package:goods_admin/business%20logic/cubits/selected_clients_notification_cubit/selected_clients_notification_cubit.dart';
 import 'package:goods_admin/data/global/theme/theme_data.dart';
+import 'package:goods_admin/presentation/buttons/main_button.dart';
 import 'package:goods_admin/presentation/custom_widgets/custom_app_bar%20copy.dart';
 import 'package:goods_admin/presentation/custom_widgets/custom_container.dart';
 
@@ -20,6 +23,7 @@ class _HomeState extends State<Home> {
     super.initState();
     context.read<GetClassificationsCubit>().getProductsClassifications();
     context.read<FetchProductsCubit>().fetchProducts();
+    context.read<CarouselCubit>().loadCarouselImages();
   }
 
   @override
@@ -53,29 +57,35 @@ class _HomeState extends State<Home> {
         child: Center(
           child: Column(
             children: [
-              _buildCustomContainer(
+              mainButton(
                 context: context,
                 screenWidth: screenWidth,
                 text: 'إدارة المنتجات',
                 routeName: '/ProductsManagement',
               ),
-              _buildCustomContainer(
+              mainButton(
                 context: context,
                 screenWidth: screenWidth,
                 text: 'إدارة العملاء',
                 routeName: '/EditClients',
               ),
-              _buildCustomContainer(
+              mainButton(
                 context: context,
                 screenWidth: screenWidth,
                 text: 'إدارة المواقع',
                 routeName: '/AddLocation',
               ),
-              _buildCustomContainer(
+              mainButton(
                 context: context,
                 screenWidth: screenWidth,
                 text: 'إدارة البانر دعائي',
                 routeName: '/CarouselAdminScreen',
+              ),
+              mainButton(
+                context: context,
+                screenWidth: screenWidth,
+                text: 'إدارة الإشعارات',
+                routeName: '/NotificationsManagement',
               ),
             ],
           ),
@@ -88,19 +98,5 @@ class _HomeState extends State<Home> {
     FirebaseAuth.instance.signOut().then((_) {
       Navigator.pushReplacementNamed(context, '/SignIn');
     });
-  }
-
-  Widget _buildCustomContainer({
-    required BuildContext context,
-    required double screenWidth,
-    required String text,
-    required String routeName,
-  }) {
-    return customContainer(
-      context: context,
-      onTap: () => Navigator.pushNamed(context, routeName),
-      screenWidth: screenWidth,
-      text: text,
-    );
   }
 }

@@ -9,6 +9,8 @@ import 'package:goods_admin/business%20logic/cubits/firestore_services_cubit/fir
 import 'package:goods_admin/business%20logic/cubits/get_classifications/get_classifications_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/get_client_data/get_client_data_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/image_picker_cubit/image_cubit.dart';
+import 'package:goods_admin/business%20logic/cubits/selected_clients_notification_cubit/selected_clients_notification_cubit.dart';
+import 'package:goods_admin/test.dart';
 
 List<BlocProvider> buildProviders() {
   return [
@@ -25,5 +27,7 @@ List<BlocProvider> buildProviders() {
     BlocProvider<AuthCubit>(create: (context) => AuthCubit()),
     BlocProvider<AddLocationCubit>(create: (context) => AddLocationCubit()),
     BlocProvider<CarouselCubit>(create: (context) => CarouselCubit()),
+    BlocProvider<SelectedClientsCubit>(
+        create: (context) => SelectedClientsCubit()),
   ];
 }

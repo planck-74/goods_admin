@@ -49,7 +49,8 @@ class _EditClientsState extends State<EditClients> {
           .searchClientsComprehensive(query);
 
       List<ClientModel> clients = docs
-          .map((doc) => ClientModel.fromMap(doc.data() as Map<String, dynamic>))
+          .map((doc) =>
+              ClientModel.fromMap(doc.data() as DocumentSnapshot<Object?>))
           .where(_shouldDisplayClient)
           .toList();
 
@@ -296,9 +297,9 @@ class _EditClientsState extends State<EditClients> {
             width: 80,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(40),
-              child: client.imageUrl.isNotEmpty
+              child: client.imageUrl != null
                   ? Image.network(
-                      client.imageUrl,
+                      client.imageUrl ?? '',
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) =>
                           const Icon(Icons.person, size: 40),
@@ -441,10 +442,10 @@ class _ClientDetailsDialogState extends State<ClientDetailsDialog> {
 
     try {
       // Delete the previous image if it exists
-      if (widget.client.imageUrl.isNotEmpty) {
+      if (widget.client.imageUrl != null) {
         try {
           final Reference oldImageRef =
-              FirebaseStorage.instance.refFromURL(widget.client.imageUrl);
+              FirebaseStorage.instance.refFromURL(widget.client.imageUrl ?? '');
           await oldImageRef.delete();
         } catch (e) {
           // If deletion fails, continue with upload (maybe the image doesn't exist)
@@ -607,9 +608,9 @@ class _ClientDetailsDialogState extends State<ClientDetailsDialog> {
                                           _selectedImage!,
                                           fit: BoxFit.cover,
                                         )
-                                      : widget.client.imageUrl.isNotEmpty
+                                      : widget.client.imageUrl != null
                                           ? Image.network(
-                                              widget.client.imageUrl,
+                                              widget.client.imageUrl ?? '',
                                               fit: BoxFit.cover,
                                               errorBuilder: (context, error,
                                                       stackTrace) =>
@@ -696,15 +697,20 @@ class _ClientDetailsDialogState extends State<ClientDetailsDialog> {
                           ),
                           const SizedBox(height: 8),
                           _buildInfoRow('معرف العميل', widget.client.uid),
-                          _buildInfoRow('إجمالي المدخرات',
-                              '${widget.client.totalSavings.toStringAsFixed(2)} جنيه'),
-                          _buildInfoRow('إجمالي المدفوعات',
-                              '${widget.client.totalPayments.toStringAsFixed(2)} جنيه'),
-                          const SizedBox(height: 8),
                           GestureDetector(
                             onTap: () {
-                              openMap(widget.client.geoLocation.latitude,
-                                  widget.client.geoLocation.longitude);
+                              if (widget.client.geoLocation != null) {
+                                openMap(
+                                  widget.client.geoLocation!.latitude,
+                                  widget.client.geoLocation!.longitude,
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text(
+                                          'لا يوجد موقع جغرافي لهذا العميل')),
+                                );
+                              }
                             },
                             child: Row(
                               children: [

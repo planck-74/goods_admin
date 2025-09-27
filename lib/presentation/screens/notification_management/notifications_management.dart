@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods_admin/business%20logic/cubits/fetch_products/fetch_products_cubit.dart';
@@ -8,14 +7,15 @@ import 'package:goods_admin/presentation/buttons/main_button.dart';
 import 'package:goods_admin/presentation/custom_widgets/custom_app_bar%20copy.dart';
 import 'package:goods_admin/presentation/custom_widgets/custom_container.dart';
 
-class ProductsManagement extends StatefulWidget {
-  const ProductsManagement({super.key});
+class NotificationsManagement extends StatefulWidget {
+  const NotificationsManagement({super.key});
 
   @override
-  State<ProductsManagement> createState() => _ProductsManagementState();
+  State<NotificationsManagement> createState() =>
+      _NotificationsManagementState();
 }
 
-class _ProductsManagementState extends State<ProductsManagement> {
+class _NotificationsManagementState extends State<NotificationsManagement> {
   @override
   initState() {
     super.initState();
@@ -48,14 +48,14 @@ class _ProductsManagementState extends State<ProductsManagement> {
               mainButton(
                 context: context,
                 screenWidth: screenWidth,
-                text: 'إضافة منتج',
-                routeName: '/AddProduct',
+                text: 'إرسال إشعار لجميع العملاء',
+                routeName: '/SendToAll',
               ),
               mainButton(
                 context: context,
                 screenWidth: screenWidth,
-                text: 'تعديل المنتجات',
-                routeName: '/EditProducts',
+                text: 'إرسال إشعار للبعض',
+                routeName: '/SendToSelectedClientsScreen',
               ),
             ],
           ),

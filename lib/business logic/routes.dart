@@ -11,6 +11,9 @@ import 'package:goods_admin/presentation/screens/edit_clients.dart';
 import 'package:goods_admin/presentation/screens/edit_products.dart';
 import 'package:goods_admin/presentation/screens/edit_products_classification.dart';
 import 'package:goods_admin/presentation/screens/home.dart';
+import 'package:goods_admin/presentation/screens/notification_management/notifications_management.dart';
+import 'package:goods_admin/presentation/screens/notification_management/send_to_all.dart';
+import 'package:goods_admin/presentation/screens/notification_management/send_to_selected.dart';
 import 'package:goods_admin/presentation/screens/products_management.dart';
 
 final Map<String, WidgetBuilder> routes = {
@@ -28,4 +31,8 @@ final Map<String, WidgetBuilder> routes = {
   '/Locations': (context) => const Locations(),
   '/CarouselAdminScreen': (context) => const CarouselAdminScreen(),
   '/ProductsManagement': (context) => const ProductsManagement(),
+  '/NotificationsManagement': (context) => const NotificationsManagement(),
+  '/SendToAll': (context) => const SendToAll(),
+  '/SendToSelectedClientsScreen': (context) =>
+      const SendToSelectedClientsScreen(),
 };
