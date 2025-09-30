@@ -15,7 +15,7 @@ class GetClientDataCubit extends Cubit<GetClientDataState> {
       QuerySnapshot<Map<String, dynamic>> documentSnapshot =
           await FirebaseFirestore.instance.collection('clients').get();
 
-      // Pair each doc's data with a parsed DateTime (or null)
+      // Store the full DocumentSnapshot with parsed date for sorting
       final List<Map<String, dynamic>> docsWithDates =
           documentSnapshot.docs.map((doc) {
         final data = doc.data();
@@ -28,7 +28,10 @@ class GetClientDataCubit extends Cubit<GetClientDataState> {
           parsed = DateTime.fromMillisecondsSinceEpoch(ts);
         else if (ts is String) parsed = DateTime.tryParse(ts);
 
-        return {'data': data, 'date': parsed};
+        return {
+          'doc': doc, // Store the full document, not just the data
+          'date': parsed
+        };
       }).toList();
 
       // Sort: put documents with a date first, ordered newest -> oldest. Null dates go last.
@@ -41,10 +44,10 @@ class GetClientDataCubit extends Cubit<GetClientDataState> {
         return db.compareTo(da); // descending (newest first)
       });
 
-      // Map to ClientModel in the sorted order
+      // Map to ClientModel in the sorted order using the document
       final List<ClientModel> clients = docsWithDates
-          .map((e) =>
-              ClientModel.fromMap(e['data'] as DocumentSnapshot<Object?>))
+          .map((e) => ClientModel.fromDocumentSnapshot(
+              e['doc'] as QueryDocumentSnapshot<Map<String, dynamic>>))
           .toList();
 
       emit(GetClientDataSuccess(clients));

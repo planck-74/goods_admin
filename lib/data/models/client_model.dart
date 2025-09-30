@@ -95,64 +95,74 @@ class ClientModel extends Equatable {
     );
   }
 
-  /// Safe factory that tolerates nulls and different types from Firestore.
-  factory ClientModel.fromMap(DocumentSnapshot doc) {
+  /// Helper to parse timestamp-like fields
+  static DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+    if (value is Timestamp) return value.toDate();
+    if (value is DateTime) return value;
+    if (value is int) {
+      try {
+        return DateTime.fromMillisecondsSinceEpoch(value);
+      } catch (_) {
+        return null;
+      }
+    }
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  /// Helper to parse int-like fields
+  static int _parseInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
+  }
+
+  /// Helper to parse tokens safely
+  static List<String> _parseTokens(dynamic value) {
+    if (value == null) return <String>[];
+    if (value is List) {
+      return value
+          .map((e) => e?.toString() ?? '')
+          .where((s) => s.isNotEmpty)
+          .toList();
+    }
+    return <String>[];
+  }
+
+  /// Helper to parse map safely
+  static Map<String, dynamic>? _parseMap(dynamic value) {
+    if (value == null) return null;
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return null;
+  }
+
+  /// Factory from DocumentSnapshot (for Firestore queries)
+  factory ClientModel.fromDocumentSnapshot(DocumentSnapshot doc) {
     final raw = doc.data();
     final Map<String, dynamic> data =
         (raw is Map<String, dynamic>) ? raw : <String, dynamic>{};
 
-    // helper to parse timestamp-like fields
-    DateTime? _parseDateTime(dynamic value) {
-      if (value == null) return null;
-      if (value is Timestamp) return value.toDate();
-      if (value is DateTime) return value;
-      if (value is int) {
-        // assume millisecondsSinceEpoch
-        try {
-          return DateTime.fromMillisecondsSinceEpoch(value);
-        } catch (_) {
-          return null;
-        }
-      }
-      if (value is String) {
-        try {
-          return DateTime.parse(value);
-        } catch (_) {
-          return null;
-        }
-      }
-      return null;
-    }
+    return ClientModel._fromMapData(doc.id, data);
+  }
 
-    // helper to parse int-like fields
-    int _parseInt(dynamic value) {
-      if (value == null) return 0;
-      if (value is int) return value;
-      if (value is double) return value.toInt();
-      if (value is String) return int.tryParse(value) ?? 0;
-      return 0;
-    }
+  /// Factory from Map (for when you already have the data extracted)
+  factory ClientModel.fromMapData(String docId, Map<String, dynamic> data) {
+    return ClientModel._fromMapData(docId, data);
+  }
 
-    // parse tokens safely
-    List<String> _parseTokens(dynamic value) {
-      if (value == null) return <String>[];
-      if (value is List)
-        return value
-            .map((e) => e?.toString() ?? '')
-            .where((s) => s.isNotEmpty)
-            .toList();
-      return <String>[];
-    }
-
-    // parse map safely
-    Map<String, dynamic>? _parseMap(dynamic value) {
-      if (value == null) return null;
-      if (value is Map) return Map<String, dynamic>.from(value);
-      return null;
-    }
-
+  /// Private constructor that does the actual parsing
+  factory ClientModel._fromMapData(String docId, Map<String, dynamic> data) {
     return ClientModel(
-      id: doc.id,
+      id: docId,
       businessName: (data['businessName'] ?? '') as String,
       phoneNumber: (data['phoneNumber'] ?? '') as String,
       secondPhoneNumber: (data['secondPhoneNumber'] != null)
@@ -176,6 +186,11 @@ class ClientModel extends Equatable {
       lastTokenUpdate: _parseDateTime(data['lastTokenUpdate']),
       deviceInfo: _parseMap(data['deviceInfo']),
     );
+  }
+
+  /// Legacy factory for backward compatibility - now routes to fromDocumentSnapshot
+  factory ClientModel.fromMap(DocumentSnapshot doc) {
+    return ClientModel.fromDocumentSnapshot(doc);
   }
 
   Map<String, dynamic> toFirestore() {

@@ -48,9 +48,9 @@ class _EditClientsState extends State<EditClients> {
           .read<GetClientDataCubit>()
           .searchClientsComprehensive(query);
 
+      // Use the new fromDocumentSnapshot factory method
       List<ClientModel> clients = docs
-          .map((doc) =>
-              ClientModel.fromMap(doc.data() as DocumentSnapshot<Object?>))
+          .map((doc) => ClientModel.fromDocumentSnapshot(doc))
           .where(_shouldDisplayClient)
           .toList();
 
