@@ -41,7 +41,7 @@ class GoodsAdmin extends StatelessWidget {
         routes: routes,
         debugShowCheckedModeBanner: false,
         theme: getThemeData(),
-        title: 'إدارة جودز',
+        title: 'إدارة بضائع',
         supportedLocales: const [Locale('ar', 'EG')],
         locale: const Locale('ar', 'EG'),
         localizationsDelegates: const [

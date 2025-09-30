@@ -1,4 +1,6 @@
-class Product {
+import 'package:equatable/equatable.dart';
+
+class Product extends Equatable {
   final String productId;
   final String imageUrl;
   final String name;
@@ -8,8 +10,11 @@ class Product {
   final String classification;
   final String? note;
   final int salesCount;
+  final double? price; // اختياري
+  final double? offerPrice; // اختياري
+  final bool? availability; // اختياري
 
-  Product({
+  const Product({
     required this.productId,
     required this.imageUrl,
     required this.name,
@@ -19,6 +24,9 @@ class Product {
     required this.classification,
     this.note,
     required this.salesCount,
+    this.price,
+    this.offerPrice,
+    this.availability,
   });
 
   factory Product.fromMap(Map<String, dynamic> map) {
@@ -32,6 +40,11 @@ class Product {
       classification: map['classification'] ?? '',
       note: map['note'],
       salesCount: map['salesCount'] ?? 0,
+      price: map['price'] != null ? (map['price'] as num).toDouble() : null,
+      offerPrice: map['offerPrice'] != null
+          ? (map['offerPrice'] as num).toDouble()
+          : null,
+      availability: map['availability'],
     );
   }
 
@@ -46,6 +59,25 @@ class Product {
       'classification': classification,
       'note': note,
       'salesCount': salesCount,
+      if (price != null) 'price': price,
+      if (offerPrice != null) 'offerPrice': offerPrice,
+      if (availability != null) 'availability': availability,
     };
   }
+
+  @override
+  List<Object?> get props => [
+        productId,
+        imageUrl,
+        name,
+        manufacturer,
+        size,
+        package,
+        classification,
+        note,
+        salesCount,
+        price,
+        offerPrice,
+        availability,
+      ];
 }

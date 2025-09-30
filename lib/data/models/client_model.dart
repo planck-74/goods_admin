@@ -173,12 +173,10 @@ class ClientModel extends Equatable {
       town: (data['town'] ?? '') as String,
       area: (data['area'] ?? '') as String,
       addressTyped: (data['addressTyped'] ?? '') as String,
-      imageUrl: data['imageUrl'] != null ? data['imageUrl'].toString() : null,
+      imageUrl: data['imageUrl']?.toString(),
       uid: (data['uid'] ?? '') as String,
       fcmTokens: _parseTokens(data['fcmTokens']),
-      lastActiveToken: data['lastActiveToken'] != null
-          ? data['lastActiveToken'].toString()
-          : null,
+      lastActiveToken: data['lastActiveToken']?.toString(),
       totalDevices: _parseInt(data['totalDevices']),
       geoLocation: data['geoLocation'] is GeoPoint
           ? data['geoLocation'] as GeoPoint

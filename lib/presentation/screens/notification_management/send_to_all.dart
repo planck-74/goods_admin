@@ -591,7 +591,7 @@ class _SendToAllState extends State<SendToAll> with TickerProviderStateMixin {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<NotificationType>(
-                value: _selectedType,
+                initialValue: _selectedType,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -645,7 +645,7 @@ class _SendToAllState extends State<SendToAll> with TickerProviderStateMixin {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<NotificationPriority>(
-                value: _selectedPriority,
+                initialValue: _selectedPriority,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),

@@ -1079,7 +1079,7 @@ class _SendToSelectedClientsScreenState
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               DropdownButtonFormField<NotificationType>(
-                value: _selectedType,
+                initialValue: _selectedType,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12)),
@@ -1112,7 +1112,7 @@ class _SendToSelectedClientsScreenState
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               DropdownButtonFormField<NotificationPriority>(
-                value: _selectedPriority,
+                initialValue: _selectedPriority,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12)),

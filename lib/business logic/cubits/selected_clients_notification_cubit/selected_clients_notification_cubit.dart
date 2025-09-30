@@ -450,7 +450,6 @@ class SelectedClientsCubit extends Cubit<SelectedClientsState> {
         case ClientFilter.all:
         case ClientFilter.byCategory:
         case ClientFilter.byGovernment:
-        default:
           return true;
       }
     });

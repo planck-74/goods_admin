@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods_admin/business%20logic/cubits/carousel_cubit/carousel_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/carousel_cubit/carousel_state.dart';
 import 'package:goods_admin/data/global/theme/theme_data.dart';
+import 'package:goods_admin/presentation/custom_widgets/custom_app_bar%20copy.dart';
 
 class CarouselAdminScreen extends StatelessWidget {
   const CarouselAdminScreen({super.key});
@@ -11,10 +12,12 @@ class CarouselAdminScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('إدارة صور الكاروسيل'),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+      appBar: customAppBar(
+        context,
+        Text(
+          'إدارة المجلة',
+          style: TextStyle(color: Colors.white),
+        ),
       ),
       body: BlocListener<CarouselCubit, CarouselState>(
         listener: (context, state) {

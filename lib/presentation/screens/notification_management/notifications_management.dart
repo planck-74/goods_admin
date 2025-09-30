@@ -5,7 +5,6 @@ import 'package:goods_admin/business%20logic/cubits/get_classifications/get_clas
 import 'package:goods_admin/data/global/theme/theme_data.dart';
 import 'package:goods_admin/presentation/buttons/main_button.dart';
 import 'package:goods_admin/presentation/custom_widgets/custom_app_bar%20copy.dart';
-import 'package:goods_admin/presentation/custom_widgets/custom_container.dart';
 
 class NotificationsManagement extends StatefulWidget {
   const NotificationsManagement({super.key});

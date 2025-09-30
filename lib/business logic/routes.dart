@@ -14,6 +14,9 @@ import 'package:goods_admin/presentation/screens/home.dart';
 import 'package:goods_admin/presentation/screens/notification_management/notifications_management.dart';
 import 'package:goods_admin/presentation/screens/notification_management/send_to_all.dart';
 import 'package:goods_admin/presentation/screens/notification_management/send_to_selected.dart';
+import 'package:goods_admin/presentation/screens/orders_management/orders_management.dart';
+import 'package:goods_admin/presentation/screens/orders_management/orders_screen.dart';
+import 'package:goods_admin/presentation/screens/orders_management/reports_screen.dart';
 import 'package:goods_admin/presentation/screens/products_management.dart';
 
 final Map<String, WidgetBuilder> routes = {
@@ -33,6 +36,9 @@ final Map<String, WidgetBuilder> routes = {
   '/ProductsManagement': (context) => const ProductsManagement(),
   '/NotificationsManagement': (context) => const NotificationsManagement(),
   '/SendToAll': (context) => const SendToAll(),
+  '/OrdersScreen': (context) => const OrdersScreen(),
+  '/ReportsScreen': (context) => const ReportsScreen(),
+  '/OrdersManagement': (context) => const OrdersManagement(),
   '/SendToSelectedClientsScreen': (context) =>
       const SendToSelectedClientsScreen(),
 };
