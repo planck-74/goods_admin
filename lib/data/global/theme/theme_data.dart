@@ -22,9 +22,25 @@ ThemeData getThemeData() {
       backgroundColor: primaryColor,
       iconTheme: IconThemeData(color: whiteColor),
     ),
-    buttonTheme: const ButtonThemeData(
-      buttonColor: primaryColor,
-      height: 50,
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primaryColor,
+        foregroundColor: whiteColor, // النص و الأيقونات
+        textStyle: const TextStyle(fontFamily: 'Cairo'),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: whiteColor,
+        textStyle: const TextStyle(fontFamily: 'Cairo'),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: whiteColor,
+        side: const BorderSide(color: whiteColor),
+        textStyle: const TextStyle(fontFamily: 'Cairo'),
+      ),
     ),
     fontFamily: 'Cairo',
     textTheme: _textTheme(),

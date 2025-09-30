@@ -1,12 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:goods_admin/business%20logic/cubit/orders_cubit/orders_cubit.dart';
-import 'package:goods_admin/business%20logic/cubit/orders_cubit/orders_state.dart';
-import 'package:goods_admin/business%20logic/cubit/reports_cubit/reports_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/carousel_cubit/carousel_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/fetch_products/fetch_products_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/get_classifications/get_classifications_cubit.dart';
+import 'package:goods_admin/business%20logic/cubits/orders_cubit/orders_cubit.dart';
+import 'package:goods_admin/business%20logic/cubits/orders_cubit/orders_state.dart';
+import 'package:goods_admin/business%20logic/cubits/reports_cubit/reports_cubit.dart';
 import 'package:goods_admin/data/global/theme/theme_data.dart';
 import 'package:goods_admin/presentation/custom_widgets/custom_app_bar%20copy.dart';
 
@@ -323,6 +323,14 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                 Icons.location_on_rounded,
                 AppColors.crimsonGradient,
                 '/AddLocation',
+              ),
+              _buildManagementCard(
+                context,
+                'المصنعون',
+                'إدارة المصنعين',
+                Icons.factory_rounded,
+                AppColors.warmGradient,
+                '/ManufacturersManagement',
               ),
               _buildManagementCard(
                 context,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:goods_admin/business%20logic/cubit/orders_cubit/orders_cubit.dart';
-import 'package:goods_admin/business%20logic/cubit/orders_cubit/orders_state.dart';
+import 'package:goods_admin/business%20logic/cubits/orders_cubit/orders_cubit.dart';
+import 'package:goods_admin/business%20logic/cubits/orders_cubit/orders_state.dart';
 import 'package:goods_admin/data/models/order_model.dart';
 import 'package:goods_admin/presentation/cards/order_card.dart';
 
