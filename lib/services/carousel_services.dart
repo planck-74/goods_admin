@@ -12,7 +12,21 @@ class CarouselService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  Stream<List<CarouselImageModel>> getCarouselImages() {
+  // جلب جميع الصور (للوحة التحكم)
+  Stream<List<CarouselImageModel>> getAllCarouselImages() {
+    return _firestore
+        .collection(_collectionName)
+        .doc('carousel')
+        .collection(_subCollectionName)
+        .orderBy('order')
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => CarouselImageModel.fromMap(doc.data(), doc.id))
+            .toList());
+  }
+
+  // جلب الصور النشطة فقط (للعملاء)
+  Stream<List<CarouselImageModel>> getActiveCarouselImages() {
     return _firestore
         .collection(_collectionName)
         .doc('carousel')
@@ -43,6 +57,7 @@ class CarouselService {
         id: '',
         imageUrl: imageUrl,
         order: order,
+        isActive: true,
         createdAt: DateTime.now(),
       );
 
@@ -72,12 +87,50 @@ class CarouselService {
   }
 
   Future<void> updateImageOrder(String imageId, int newOrder) async {
-    await _firestore
-        .collection(_collectionName)
-        .doc('carousel')
-        .collection(_subCollectionName)
-        .doc(imageId)
-        .update({'order': newOrder});
+    try {
+      await _firestore
+          .collection(_collectionName)
+          .doc('carousel')
+          .collection(_subCollectionName)
+          .doc(imageId)
+          .update({'order': newOrder});
+    } catch (e) {
+      throw Exception('فشل في تحديث الترتيب: $e');
+    }
+  }
+
+  Future<void> toggleImageStatus(String imageId, bool isActive) async {
+    try {
+      await _firestore
+          .collection(_collectionName)
+          .doc('carousel')
+          .collection(_subCollectionName)
+          .doc(imageId)
+          .update({'isActive': isActive});
+    } catch (e) {
+      throw Exception('فشل في تحديث حالة الصورة: $e');
+    }
+  }
+
+  // إعادة ترتيب مجموعة من الصور
+  Future<void> reorderImages(List<CarouselImageModel> images) async {
+    try {
+      final batch = _firestore.batch();
+
+      for (int i = 0; i < images.length; i++) {
+        final docRef = _firestore
+            .collection(_collectionName)
+            .doc('carousel')
+            .collection(_subCollectionName)
+            .doc(images[i].id);
+
+        batch.update(docRef, {'order': i});
+      }
+
+      await batch.commit();
+    } catch (e) {
+      throw Exception('فشل في إعادة الترتيب: $e');
+    }
   }
 
   Future<File?> pickImage() async {

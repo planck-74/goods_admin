@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods_admin/business%20logic/cubits/orders_cubit/orders_cubit.dart';
 import 'package:goods_admin/data/models/order_model.dart';
@@ -9,7 +8,7 @@ import 'package:intl/intl.dart';
 class OrderDetailsSheet extends StatefulWidget {
   final Order order;
 
-  const OrderDetailsSheet({Key? key, required this.order}) : super(key: key);
+  const OrderDetailsSheet({super.key, required this.order});
 
   @override
   State<OrderDetailsSheet> createState() => _OrderDetailsSheetState();
@@ -107,7 +106,7 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                             ),
                             const SizedBox(height: 12),
                             DropdownButtonFormField<String>(
-                              value: _selectedState,
+                              initialValue: _selectedState,
                               decoration: const InputDecoration(
                                 border: OutlineInputBorder(),
                                 labelText: 'الحالة',

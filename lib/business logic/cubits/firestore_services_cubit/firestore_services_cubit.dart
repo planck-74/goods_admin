@@ -195,10 +195,6 @@ class FirestoreServicesCubit extends Cubit<FirestoreServicesState> {
     List<String> productDocIds,
   ) async {
     try {
-      print('🔄 Starting synchronization by product IDs...');
-      print('🏪 Store ID: $storeId');
-      print('🧾 Provided product IDs: $productDocIds');
-
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
       WriteBatch batch = firestore.batch();
       int updatedCount = 0;
@@ -213,15 +209,11 @@ class FirestoreServicesCubit extends Cubit<FirestoreServicesState> {
         final storeDoc = await storeDocRef.get();
 
         if (!storeDoc.exists) {
-          print('⚠️ Store product not found: $storeProductId');
           continue;
         }
 
         final storeProduct = storeDoc.data()!;
         final mainProductId = storeProduct['productId'];
-
-        print(
-            '🔍 Processing store product: ${storeProduct['name']} (ID: $mainProductId)');
 
         final mainProductDoc =
             await firestore.collection('products').doc(mainProductId).get();
@@ -242,19 +234,11 @@ class FirestoreServicesCubit extends Cubit<FirestoreServicesState> {
 
           batch.update(storeDocRef, updatedData);
           updatedCount++;
-          print('📝 Prepared update for product');
-        } else {
-          print('⚠️ Product not found in main collection: $mainProductId');
-        }
+        } else {}
       }
 
-      print('💾 Saving batch updates...');
       await batch.commit();
-
-      print('✅ Successfully updated $updatedCount products');
-    } catch (e) {
-      print('❌ Error in syncStoreProductsByIds: $e');
-    }
+    } catch (e) {}
   }
 }
 
@@ -272,10 +256,6 @@ Future<void> syncStoreProductsByIds(
   List<String> productDocIds,
 ) async {
   try {
-    print('🔄 Starting synchronization by product IDs...');
-    print('🏪 Store ID: $storeId');
-    print('🧾 Provided product IDs: $productDocIds');
-
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
     WriteBatch batch = firestore.batch();
     int updatedCount = 0;
@@ -290,15 +270,11 @@ Future<void> syncStoreProductsByIds(
       final storeDoc = await storeDocRef.get();
 
       if (!storeDoc.exists) {
-        print('⚠️ Store product not found: $storeProductId');
         continue;
       }
 
       final storeProduct = storeDoc.data()!;
       final mainProductId = storeProduct['productId'];
-
-      print(
-          '🔍 Processing store product: ${storeProduct['name']} (ID: $mainProductId)');
 
       final mainProductDoc =
           await firestore.collection('products').doc(mainProductId).get();
@@ -319,17 +295,9 @@ Future<void> syncStoreProductsByIds(
 
         batch.update(storeDocRef, updatedData);
         updatedCount++;
-        print('📝 Prepared update for product');
-      } else {
-        print('⚠️ Product not found in main collection: $mainProductId');
-      }
+      } else {}
     }
 
-    print('💾 Saving batch updates...');
     await batch.commit();
-
-    print('✅ Successfully updated $updatedCount products');
-  } catch (e) {
-    print('❌ Error in syncStoreProductsByIds: $e');
-  }
+  } catch (e) {}
 }

@@ -22,8 +22,6 @@ void main() async {
     await FirebaseAppCheck.instance.activate(
       androidProvider: AndroidProvider.playIntegrity,
     );
-
-    // Initialize FCM Token Service
     await FCMTokenService.initialize();
   }
 

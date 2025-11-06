@@ -1,13 +1,10 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:goods_admin/data/models/order_model.dart';
 
 class ProductCard extends StatelessWidget {
   final OrderProduct orderProduct;
 
-  const ProductCard({Key? key, required this.orderProduct}) : super(key: key);
+  const ProductCard({super.key, required this.orderProduct});
 
   @override
   Widget build(BuildContext context) {

@@ -6,7 +6,7 @@ import 'package:goods_admin/data/models/order_model.dart';
 import 'package:goods_admin/presentation/cards/order_card.dart';
 
 class OrdersScreen extends StatefulWidget {
-  const OrdersScreen({Key? key}) : super(key: key);
+  const OrdersScreen({super.key});
 
   @override
   State<OrdersScreen> createState() => _OrdersScreenState();
@@ -144,7 +144,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButtonFormField<String>(
-              value: _selectedState,
+              initialValue: _selectedState,
               decoration: const InputDecoration(labelText: 'حالة الطلب'),
               items: _orderStates.map((state) {
                 return DropdownMenuItem(value: state, child: Text(state));

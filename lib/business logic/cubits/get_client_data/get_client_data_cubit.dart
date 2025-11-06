@@ -22,9 +22,9 @@ class GetClientDataCubit extends Cubit<GetClientDataState> {
         final dynamic ts = data['dateCreated'];
 
         DateTime? parsed;
-        if (ts is Timestamp)
+        if (ts is Timestamp) {
           parsed = ts.toDate();
-        else if (ts is int)
+        } else if (ts is int)
           parsed = DateTime.fromMillisecondsSinceEpoch(ts);
         else if (ts is String) parsed = DateTime.tryParse(ts);
 

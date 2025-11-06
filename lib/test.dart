@@ -14,9 +14,9 @@ class ManufacturerSelectionScreen extends StatelessWidget {
   final List<Product> selectedProducts;
 
   const ManufacturerSelectionScreen({
-    Key? key,
+    super.key,
     required this.selectedProducts,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -34,9 +34,9 @@ class ManufacturerSelectionView extends StatelessWidget {
   final List<Product> selectedProducts;
 
   const ManufacturerSelectionView({
-    Key? key,
+    super.key,
     required this.selectedProducts,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

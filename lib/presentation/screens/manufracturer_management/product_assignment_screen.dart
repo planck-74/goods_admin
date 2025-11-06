@@ -12,8 +12,7 @@ import 'package:goods_admin/repos/product_repository.dart';
 class ProductAssignmentScreen extends StatelessWidget {
   final Manufacturer manufacturer;
 
-  const ProductAssignmentScreen({Key? key, required this.manufacturer})
-      : super(key: key);
+  const ProductAssignmentScreen({super.key, required this.manufacturer});
 
   @override
   Widget build(BuildContext context) {
@@ -30,8 +29,7 @@ class ProductAssignmentScreen extends StatelessWidget {
 class ProductAssignmentView extends StatefulWidget {
   final Manufacturer manufacturer;
 
-  const ProductAssignmentView({Key? key, required this.manufacturer})
-      : super(key: key);
+  const ProductAssignmentView({super.key, required this.manufacturer});
 
   @override
   State<ProductAssignmentView> createState() => _ProductAssignmentViewState();
@@ -385,11 +383,11 @@ class ProductSelectionCard extends StatelessWidget {
   final VoidCallback onToggle;
 
   const ProductSelectionCard({
-    Key? key,
+    super.key,
     required this.product,
     required this.isSelected,
     required this.onToggle,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

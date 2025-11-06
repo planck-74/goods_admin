@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:equatable/equatable.dart';
 import 'package:goods_admin/business%20logic/cubits/notifications_cubit/cubit/notifications_state.dart';
 import 'package:goods_admin/services/notifications_service.dart';
 

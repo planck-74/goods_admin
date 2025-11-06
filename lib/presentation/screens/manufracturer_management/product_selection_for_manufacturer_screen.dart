@@ -7,7 +7,7 @@ import 'package:goods_admin/data/models/product_model.dart';
 import 'package:goods_admin/test.dart';
 
 class ProductSelectionForManufacturerScreen extends StatefulWidget {
-  const ProductSelectionForManufacturerScreen({Key? key}) : super(key: key);
+  const ProductSelectionForManufacturerScreen({super.key});
 
   @override
   State<ProductSelectionForManufacturerScreen> createState() =>

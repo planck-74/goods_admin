@@ -2,17 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods_admin/business%20logic/cubits/manufacturer_cubit/manufacturer_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/manufacturer_cubit/manufacturer_state.dart';
-import 'package:goods_admin/business%20logic/cubits/product_assignment_cubit/product_assignment_cubit.dart';
 import 'package:goods_admin/data/global/theme/theme_data.dart';
 import 'package:goods_admin/data/models/manufacturer_model.dart';
 import 'package:goods_admin/repos/manufacturer_repository.dart';
-import 'package:goods_admin/repos/product_repository.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'product_assignment_screen.dart';
 
 class ManufacturersScreen extends StatelessWidget {
-  const ManufacturersScreen({Key? key}) : super(key: key);
+  const ManufacturersScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +23,7 @@ class ManufacturersScreen extends StatelessWidget {
 }
 
 class ManufacturersView extends StatelessWidget {
-  const ManufacturersView({Key? key}) : super(key: key);
+  const ManufacturersView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -138,8 +136,7 @@ class ManufacturersView extends StatelessWidget {
 class ManufacturerCard extends StatelessWidget {
   final Manufacturer manufacturer;
 
-  const ManufacturerCard({Key? key, required this.manufacturer})
-      : super(key: key);
+  const ManufacturerCard({super.key, required this.manufacturer});
 
   @override
   Widget build(BuildContext context) {
@@ -315,7 +312,7 @@ class ManufacturerCard extends StatelessWidget {
 }
 
 class AddManufacturerDialog extends StatefulWidget {
-  const AddManufacturerDialog({Key? key}) : super(key: key);
+  const AddManufacturerDialog({super.key});
 
   @override
   State<AddManufacturerDialog> createState() => _AddManufacturerDialogState();
@@ -445,8 +442,7 @@ class _AddManufacturerDialogState extends State<AddManufacturerDialog> {
 class EditManufacturerDialog extends StatefulWidget {
   final Manufacturer manufacturer;
 
-  const EditManufacturerDialog({Key? key, required this.manufacturer})
-      : super(key: key);
+  const EditManufacturerDialog({super.key, required this.manufacturer});
 
   @override
   State<EditManufacturerDialog> createState() => _EditManufacturerDialogState();

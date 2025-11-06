@@ -4,15 +4,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods_admin/business%20logic/cubits/carousel_cubit/carousel_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/fetch_products/fetch_products_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/get_classifications/get_classifications_cubit.dart';
+import 'package:goods_admin/business%20logic/cubits/get_supplier_data/get_supplier_data_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/orders_cubit/orders_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/orders_cubit/orders_state.dart';
 import 'package:goods_admin/business%20logic/cubits/reports_cubit/reports_cubit.dart';
 import 'package:goods_admin/data/global/theme/theme_data.dart';
 import 'package:goods_admin/presentation/custom_widgets/custom_app_bar%20copy.dart';
 
-// Color Palette based on primary red
 class AppColors {
-  // Primary red gradient colors
   static const primaryRed = Color.fromARGB(255, 190, 30, 19);
   static const primaryRedLight = Color.fromARGB(255, 220, 60, 49);
   static const primaryRedDark = Color.fromARGB(255, 150, 20, 10);
@@ -106,6 +105,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     context.read<CarouselCubit>().loadCarouselImages();
     context.read<OrdersCubit>().loadOrders();
     context.read<ReportsCubit>().loadReports();
+    context.read<GetSupplierDataCubit>().getSupplierData();
   }
 
   @override
@@ -166,7 +166,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               final totalOrders =
                   ordersState is OrdersLoaded ? ordersState.orders.length : 0;
               final pendingOrders = ordersState is OrdersLoaded
-                  ? ordersState.orders.where((o) => o.state == 'pending').length
+                  ? ordersState.orders
+                      .where((o) => o.state == 'جاري التاكيد')
+                      .length
                   : 0;
               final totalProducts = productsState is FetchProductsLoaded
                   ? productsState.products.length
@@ -185,7 +187,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildStatCard(
-                      'قيد المعالجة',
+                      'طلبات بانتظار التاكيد',
                       pendingOrders.toString(),
                       Icons.pending_actions_rounded,
                       AppColors.sunsetGradient,
@@ -263,99 +265,105 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   }
 
   Widget _buildManagementGrid(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // const SizedBox(height: 10),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 50.0),
+          child: Container(
+            height: 5,
+            width: double.infinity,
             decoration: BoxDecoration(
               gradient: AppColors.primaryGradient,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Text(
-              'إدارة التطبيق',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        ListView(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            _buildManagementListItem(
+              context,
+              'المنتجات',
+              'إدارة وتعديل المنتجات',
+              Icons.inventory_2_rounded,
+              AppColors.primaryGradient,
+              '/ProductsManagement',
             ),
-          ),
-          const SizedBox(height: 20),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-            childAspectRatio: 1.1,
-            children: [
-              _buildManagementCard(
-                context,
-                'المنتجات',
-                'إدارة وتعديل المنتجات',
-                Icons.inventory_2_rounded,
-                AppColors.primaryGradient,
-                '/ProductsManagement',
-              ),
-              _buildManagementCard(
-                context,
-                'العملاء',
-                'إدارة حسابات العملاء',
-                Icons.people_rounded,
-                AppColors.warmGradient,
-                '/EditClients',
-              ),
-              _buildManagementCard(
-                context,
-                'الطلبات',
-                'متابعة وإدارة الطلبات',
-                Icons.shopping_cart_rounded,
-                AppColors.sunsetGradient,
-                '/OrdersManagement',
-              ),
-              _buildManagementCard(
-                context,
-                'المواقع',
-                'إدارة مواقع التوصيل',
-                Icons.location_on_rounded,
-                AppColors.crimsonGradient,
-                '/AddLocation',
-              ),
-              _buildManagementCard(
-                context,
-                'المصنعون',
-                'إدارة المصنعين',
-                Icons.factory_rounded,
-                AppColors.warmGradient,
-                '/ManufacturersManagement',
-              ),
-              _buildManagementCard(
-                context,
-                'البانر',
-                'تعديل الإعلانات',
-                Icons.view_carousel_rounded,
-                AppColors.coralGradient,
-                '/CarouselAdminScreen',
-              ),
-              _buildManagementCard(
-                context,
-                'الإشعارات',
-                'إرسال إشعارات للعملاء',
-                Icons.notifications_rounded,
-                AppColors.deepGradient,
-                '/NotificationsManagement',
-              ),
-            ],
-          ),
-        ],
-      ),
+            _buildManagementListItem(
+              context,
+              'خدمة العملاء',
+              'محادثات عملاء التجزئة',
+              Icons.chat_outlined,
+              AppColors.warmGradient,
+              '/ContactScreen',
+            ),
+            _buildManagementListItem(
+              context,
+              'التجار',
+              'إدارة حسابات التجار',
+              Icons.store_rounded,
+              AppColors.deepGradient,
+              '/SuppliersScreen',
+            ),
+            _buildManagementListItem(
+              context,
+              'العملاء',
+              'إدارة حسابات العملاء',
+              Icons.people_rounded,
+              AppColors.warmGradient,
+              '/EditClients',
+            ),
+            _buildManagementListItem(
+              context,
+              'الطلبات',
+              'متابعة وإدارة الطلبات',
+              Icons.shopping_cart_rounded,
+              AppColors.sunsetGradient,
+              '/OrdersManagement',
+            ),
+            _buildManagementListItem(
+              context,
+              'المواقع',
+              'إدارة مواقع التوصيل',
+              Icons.location_on_rounded,
+              AppColors.crimsonGradient,
+              '/AddLocation',
+            ),
+            _buildManagementListItem(
+              context,
+              'المصنعون',
+              'إدارة المصنعين',
+              Icons.factory_rounded,
+              AppColors.warmGradient,
+              '/ManufacturersManagement',
+            ),
+            _buildManagementListItem(
+              context,
+              'المجلة',
+              'تعديل الإعلانات',
+              Icons.view_carousel_rounded,
+              AppColors.coralGradient,
+              '/CarouselAdminScreen',
+            ),
+            _buildManagementListItem(
+              context,
+              'الإشعارات',
+              'إرسال إشعارات للعملاء',
+              Icons.notifications_rounded,
+              AppColors.deepGradient,
+              '/NotificationsManagement',
+            ),
+          ],
+        )
+      ],
     );
   }
 
-  Widget _buildManagementCard(
+  Widget _buildManagementListItem(
     BuildContext context,
     String title,
     String subtitle,
@@ -365,60 +373,65 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   ) {
     return InkWell(
       onTap: () => Navigator.pushNamed(context, route),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: whiteColor,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.08),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 gradient: gradient,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
                     color: gradient.colors.first.withOpacity(0.4),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
-              child: Icon(icon, color: whiteColor, size: 32),
+              child: Icon(icon, color: whiteColor, size: 28),
             ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.darkGrey,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.darkGrey,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.mediumGrey,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 4),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: AppColors.mediumGrey,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
+            const Icon(Icons.chevron_right, color: Colors.grey),
           ],
         ),
       ),

@@ -8,12 +8,16 @@ import 'package:goods_admin/business%20logic/cubits/fetch_products/fetch_product
 import 'package:goods_admin/business%20logic/cubits/firestore_services_cubit/firestore_services_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/get_classifications/get_classifications_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/get_client_data/get_client_data_cubit.dart';
+import 'package:goods_admin/business%20logic/cubits/get_supplier_data/get_supplier_data_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/image_picker_cubit/image_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/manufacturer_cubit/manufacturer_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/orders_cubit/orders_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/product_assignment_cubit/product_assignment_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/reports_cubit/reports_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/selected_clients_notification_cubit/selected_clients_notification_cubit.dart';
+import 'package:goods_admin/business%20logic/cubits/supplier_coverage/supplier_coverage_cubit.dart';
+import 'package:goods_admin/business%20logic/cubits/suppliers/suppliers_cubit.dart';
+import 'package:goods_admin/data/repositories/supplier_repository.dart';
 import 'package:goods_admin/repos/manufacturer_repository.dart';
 import 'package:goods_admin/repos/orders_repository.dart';
 import 'package:goods_admin/repos/product_repository.dart';
@@ -44,5 +48,13 @@ List<BlocProvider> buildProviders() {
     BlocProvider<ProductAssignmentCubit>(
         create: (context) => ProductAssignmentCubit(
             ManufacturerRepository(), ProductRepository())),
+    BlocProvider<GetSupplierDataCubit>(
+        create: (context) => GetSupplierDataCubit()),
+    BlocProvider<SupplierCoverageCubit>(
+        create: (context) => SupplierCoverageCubit(
+            supplierRepo: SupplierRepository(),
+            locationRepo: LocationRepository())),
+    BlocProvider<SuppliersCubit>(
+        create: (context) => SuppliersCubit(repository: SupplierRepository())),
   ];
 }
