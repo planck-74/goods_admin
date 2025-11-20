@@ -13,12 +13,7 @@ Widget customOutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
         elevation: 5,
-        foregroundColor: Theme.of(context).hoverColor,
         backgroundColor: const Color.fromARGB(255, 162, 79, 6).withOpacity(0.8),
-        side: BorderSide(
-          color: Theme.of(context).secondaryHeaderColor,
-          width: width,
-        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(50.0),
         ),

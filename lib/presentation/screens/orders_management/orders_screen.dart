@@ -19,8 +19,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
   final List<String> _orderStates = [
     'الكل',
-    'قيد التجهيز',
-    'في الطريق',
+    'حديث',
+    'مؤكد',
+    'جاري التوصيل',
+    'جاري التحضير',
     'تم التوصيل',
     'ملغي',
   ];
