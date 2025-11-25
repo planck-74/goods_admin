@@ -11,6 +11,7 @@ import 'package:goods_admin/business%20logic/cubits/get_client_data/get_client_d
 import 'package:goods_admin/business%20logic/cubits/get_supplier_data/get_supplier_data_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/image_picker_cubit/image_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/manufacturer_cubit/manufacturer_cubit.dart';
+import 'package:goods_admin/business%20logic/cubits/notification_scheduler_cubit/notification_scheduler_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/orders_cubit/orders_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/product_assignment_cubit/product_assignment_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/reports_cubit/reports_cubit.dart';
@@ -56,5 +57,7 @@ List<BlocProvider> buildProviders() {
             locationRepo: LocationRepository())),
     BlocProvider<SuppliersCubit>(
         create: (context) => SuppliersCubit(repository: SupplierRepository())),
+    BlocProvider<NotificationSchedulerCubit>(
+        create: (context) => NotificationSchedulerCubit()),
   ];
 }

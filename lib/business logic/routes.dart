@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:goods_admin/business%20logic/cubits/notification_scheduler_cubit/notification_scheduler_cubit.dart';
 import 'package:goods_admin/data/models/manufacturer_model.dart';
 import 'package:goods_admin/presentation/screens/add_location/add_area.dart';
 import 'package:goods_admin/presentation/screens/add_location/add_city.dart';
@@ -18,6 +20,8 @@ import 'package:goods_admin/presentation/screens/home.dart';
 import 'package:goods_admin/presentation/screens/manufracturer_management/manufacturers_management.dart';
 import 'package:goods_admin/presentation/screens/manufracturer_management/manufacturers_screen.dart';
 import 'package:goods_admin/presentation/screens/manufracturer_management/product_assignment_screen.dart';
+import 'package:goods_admin/presentation/screens/notification_management/create_scheduled_notification_screen.dart';
+import 'package:goods_admin/presentation/screens/notification_management/notification_scheduler_screen.dart';
 import 'package:goods_admin/presentation/screens/notification_management/notifications_management.dart';
 import 'package:goods_admin/presentation/screens/notification_management/send_to_all.dart';
 import 'package:goods_admin/presentation/screens/notification_management/send_to_selected.dart';
@@ -60,4 +64,10 @@ final Map<String, WidgetBuilder> routes = {
   '/SuppliersScreen': (context) => const SuppliersScreen(),
   '/ContactScreen': (context) => const ContactScreen(),
   '/ChatScreen': (context) => const ChatScreen(),
+  '/NotificationScheduler': (context) => BlocProvider(
+        create: (context) => NotificationSchedulerCubit(),
+        child: const NotificationSchedulerScreen(),
+      ),
+  '/CreateScheduledNotification': (context) =>
+      const CreateScheduledNotificationScreen(),
 };
