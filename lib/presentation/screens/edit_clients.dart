@@ -683,11 +683,14 @@ class _ClientDetailsDialogState extends State<ClientDetailsDialog>
   String? _newImageUrl;
   File? _selectedImage;
   final ImagePicker _imagePicker = ImagePicker();
+  List<Map<String, dynamic>> _orders = [];
+  bool _isLoadingOrders = false;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
+    _loadClientOrders();
     _businessNameController =
         TextEditingController(text: widget.client.businessName);
     _categoryController = TextEditingController(text: widget.client.category);
@@ -701,6 +704,33 @@ class _ClientDetailsDialogState extends State<ClientDetailsDialog>
     _addressTypedController =
         TextEditingController(text: widget.client.addressTyped);
     _noteController = TextEditingController(text: widget.clientNote ?? '');
+  }
+
+  Future<void> _loadClientOrders() async {
+    setState(() {
+      _isLoadingOrders = true;
+    });
+
+    try {
+      final ordersSnapshot = await FirebaseFirestore.instance
+          .collection('clients')
+          .doc(widget.client.uid)
+          .collection('orders')
+          .orderBy('date', descending: true)
+          .get();
+
+      setState(() {
+        _orders = ordersSnapshot.docs
+            .map((doc) => {'id': doc.id, ...doc.data()})
+            .toList();
+        _isLoadingOrders = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingOrders = false;
+      });
+      debugPrint('Error loading orders: $e');
+    }
   }
 
   Future<void> _saveNote() async {
@@ -933,6 +963,7 @@ class _ClientDetailsDialogState extends State<ClientDetailsDialog>
               tabs: const [
                 Tab(text: 'المعلومات'),
                 Tab(text: 'التقارير'),
+                Tab(text: 'الطلبات'),
                 Tab(text: 'الملاحظات'),
               ],
             ),
@@ -942,6 +973,7 @@ class _ClientDetailsDialogState extends State<ClientDetailsDialog>
                 children: [
                   _buildInfoTab(),
                   _buildReportsTab(),
+                  _buildOrdersTab(),
                   _buildNotesTab(),
                 ],
               ),
@@ -1238,6 +1270,464 @@ class _ClientDetailsDialogState extends State<ClientDetailsDialog>
                 backgroundColor: primaryColor,
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrdersTab() {
+    if (_isLoadingOrders) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_orders.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.shopping_bag_outlined,
+                size: 80, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              'لا توجد طلبات',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Calculate order statistics
+    int totalOrders = _orders.length;
+    int completedOrders =
+        _orders.where((o) => o['state'] == 'تم التوصيل').length;
+    double totalRevenue = _orders.fold(0.0, (sum, order) {
+      final total = order['totalWithOffer'] ?? order['total'] ?? 0;
+      return sum + (total is int ? total.toDouble() : total);
+    });
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Order Statistics
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  primaryColor.withOpacity(0.1),
+                  Colors.blue.withOpacity(0.05)
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: primaryColor.withOpacity(0.3)),
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  'إحصائيات الطلبات',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildOrderStat('إجمالي الطلبات', totalOrders.toString(),
+                        Icons.shopping_cart, Colors.blue),
+                    _buildOrderStat('المكتملة', completedOrders.toString(),
+                        Icons.check_circle, Colors.green),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _buildOrderStat(
+                  'إجمالي الإيرادات',
+                  '${totalRevenue.toStringAsFixed(0)} ج.م',
+                  Icons.attach_money,
+                  Colors.orange,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'سجل الطلبات',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Orders List
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _orders.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final order = _orders[index];
+              return _buildOrderCard(order);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrderStat(
+      String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrderCard(Map<String, dynamic> order) {
+    final orderDate =
+        order['date'] != null ? (order['date'] as Timestamp).toDate() : null;
+    final doneDate = order['doneAt'] != null
+        ? (order['doneAt'] as Timestamp).toDate()
+        : null;
+    final orderCode = order['orderCode']?.toString() ?? 'N/A';
+    final itemCount = order['itemCount'] ?? 0;
+    final total = order['total'] ?? 0;
+    final totalWithOffer = order['totalWithOffer'] ?? total;
+    final state = order['state'] ?? 'قيد المعالجة';
+    final note = order['note']?.toString() ?? '';
+    final products = order['products'] as List<dynamic>? ?? [];
+
+    Color stateColor;
+    IconData stateIcon;
+    switch (state) {
+      case 'تم التوصيل':
+        stateColor = Colors.green;
+        stateIcon = Icons.check_circle;
+        break;
+      case 'قيد التوصيل':
+        stateColor = Colors.orange;
+        stateIcon = Icons.local_shipping;
+        break;
+      case 'ملغي':
+        stateColor = Colors.red;
+        stateIcon = Icons.cancel;
+        break;
+      default:
+        stateColor = Colors.blue;
+        stateIcon = Icons.pending;
+    }
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.all(16),
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: stateColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(stateIcon, color: stateColor),
+        ),
+        title: Row(
+          children: [
+            Text(
+              'طلب #$orderCode',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: stateColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: stateColor.withOpacity(0.3)),
+              ),
+              child: Text(
+                state,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: stateColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.calendar_today, size: 14, color: Colors.grey[600]),
+                const SizedBox(width: 4),
+                Text(
+                  orderDate != null ? _formatDateTime(orderDate) : 'غير محدد',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(Icons.shopping_bag, size: 14, color: Colors.grey[600]),
+                const SizedBox(width: 4),
+                Text(
+                  '$itemCount منتج',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+                const SizedBox(width: 16),
+                Icon(Icons.payments, size: 14, color: Colors.grey[600]),
+                const SizedBox(width: 4),
+                Text(
+                  '$totalWithOffer ج.م',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (totalWithOffer < total) ...[
+                  const SizedBox(width: 4),
+                  Text(
+                    '$total',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey[500],
+                      decoration: TextDecoration.lineThrough,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+        children: [
+          const Divider(),
+          // Order Details
+          if (note.isNotEmpty) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.amber.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.amber.withOpacity(0.3)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.note, size: 16, color: Colors.amber),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      note,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (doneDate != null) ...[
+            Row(
+              children: [
+                const Icon(Icons.access_time, size: 16, color: Colors.green),
+                const SizedBox(width: 8),
+                Text(
+                  'تم التوصيل في: ${_formatDateTime(doneDate)}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.green,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
+          const Text(
+            'المنتجات:',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Products List
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: products.length,
+            itemBuilder: (context, idx) {
+              final item = products[idx] as Map<String, dynamic>;
+              final product = item['product'] as Map<String, dynamic>?;
+              final quantity = item['controller'] ?? 0;
+
+              if (product == null) return const SizedBox.shrink();
+
+              final productName = product['name'] ?? 'منتج غير معروف';
+              final productPrice = product['isOnSale'] == true
+                  ? product['offerPrice']
+                  : product['price'];
+              final productImage = product['imageUrl'];
+              final itemTotal = (productPrice ?? 0) * quantity;
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[200]!),
+                ),
+                child: Row(
+                  children: [
+                    // Product Image
+                    if (productImage != null)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: Image.network(
+                          productImage,
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                            width: 50,
+                            height: 50,
+                            color: Colors.grey[300],
+                            child: const Icon(Icons.image_not_supported),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(width: 12),
+                    // Product Details
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            productName,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Text(
+                                'الكمية: $quantity',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                '$itemTotal ج.م',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          // Order Total
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.green.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.green.withOpacity(0.3)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'الإجمالي:',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '$totalWithOffer ج.م',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                    if (totalWithOffer < total)
+                      Text(
+                        'كان $total ج.م',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],

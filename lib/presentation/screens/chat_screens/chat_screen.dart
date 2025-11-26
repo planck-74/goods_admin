@@ -802,11 +802,38 @@ class ClientProfileSheet extends StatefulWidget {
 class _ClientProfileSheetState extends State<ClientProfileSheet> {
   late TextEditingController _noteController;
   bool _isSavingNote = false;
+  List<Map<String, dynamic>> _orders = [];
+  bool _isLoadingOrders = true;
 
   @override
   void initState() {
     super.initState();
     _noteController = TextEditingController(text: widget.clientNote ?? '');
+    _loadClientOrders();
+  }
+
+  Future<void> _loadClientOrders() async {
+    try {
+      final ordersSnapshot = await FirebaseFirestore.instance
+          .collection('clients')
+          .doc(widget.client.uid)
+          .collection('orders')
+          .orderBy('date', descending: true)
+          .limit(5) // Load only last 5 orders in profile
+          .get();
+
+      setState(() {
+        _orders = ordersSnapshot.docs
+            .map((doc) => {'id': doc.id, ...doc.data()})
+            .toList();
+        _isLoadingOrders = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingOrders = false;
+      });
+      debugPrint('Error loading orders: $e');
+    }
   }
 
   Future<void> _saveNote() async {
@@ -936,7 +963,7 @@ class _ClientProfileSheetState extends State<ClientProfileSheet> {
                             widget.client.phoneNumber),
                         if (widget.client.secondPhoneNumber!.isNotEmpty)
                           _buildInfoRow(Icons.phone, 'الهاتف الثاني',
-                              widget.client.secondPhoneNumber ?? ""),
+                              widget.client.secondPhoneNumber ?? ''),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -988,6 +1015,148 @@ class _ClientProfileSheetState extends State<ClientProfileSheet> {
                         _buildInfoRow(Icons.devices, 'عدد الأجهزة',
                             widget.client.totalDevices?.toString() ?? '0'),
                       ],
+                    ),
+                    const SizedBox(height: 16),
+                    // Recent Orders Section
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[200]!),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.shopping_bag, color: primaryColor),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'آخر الطلبات',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          _isLoadingOrders
+                              ? const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(20),
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                )
+                              : _orders.isEmpty
+                                  ? Center(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(20),
+                                        child: Text(
+                                          'لا توجد طلبات',
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : Column(
+                                      children: _orders.map((order) {
+                                        final orderCode =
+                                            order['orderCode']?.toString() ??
+                                                'N/A';
+                                        final itemCount =
+                                            order['itemCount'] ?? 0;
+                                        final total = order['totalWithOffer'] ??
+                                            order['total'] ??
+                                            0;
+                                        final state =
+                                            order['state'] ?? 'قيد المعالجة';
+
+                                        Color stateColor;
+                                        switch (state) {
+                                          case 'تم التوصيل':
+                                            stateColor = Colors.green;
+                                            break;
+                                          case 'قيد التوصيل':
+                                            stateColor = Colors.orange;
+                                            break;
+                                          case 'ملغي':
+                                            stateColor = Colors.red;
+                                            break;
+                                          default:
+                                            stateColor = Colors.blue;
+                                        }
+
+                                        return Container(
+                                          margin:
+                                              const EdgeInsets.only(bottom: 8),
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            border: Border.all(
+                                                color: Colors.grey[300]!),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      'طلب #$orderCode',
+                                                      style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 14,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      '$itemCount منتج - $total ج.م',
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        color: Colors.grey[600],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: stateColor
+                                                      .withOpacity(0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  border: Border.all(
+                                                      color: stateColor
+                                                          .withOpacity(0.3)),
+                                                ),
+                                                child: Text(
+                                                  state,
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: stateColor,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Container(
