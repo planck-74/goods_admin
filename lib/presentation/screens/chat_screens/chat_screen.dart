@@ -1,10 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods_admin/business%20logic/cubits/admin_chat_cubit/admin_chat_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/admin_chat_cubit/admin_chat_state.dart';
+import 'package:goods_admin/data/functions/open_google_maps.dart';
 import 'package:goods_admin/data/global/theme/theme_data.dart';
 import 'package:goods_admin/data/models/chat_message.dart';
+import 'package:goods_admin/data/models/client_model.dart';
 import 'package:goods_admin/data/repositories/admin_chat_repo.dart';
 import 'package:goods_admin/presentation/custom_widgets/custom_app_bar%20copy.dart';
 import 'package:goods_admin/presentation/screens/chat_screens/chat_textfield.dart';
@@ -57,6 +60,52 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  void _showClientProfile(
+      String clientId, Map<String, dynamic> clientData) async {
+    // Fetch full client data
+    try {
+      final clientDoc = await FirebaseFirestore.instance
+          .collection('clients')
+          .doc(clientId)
+          .get();
+
+      if (!clientDoc.exists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('لم يتم العثور على بيانات العميل')),
+        );
+        return;
+      }
+
+      final client = ClientModel.fromDocumentSnapshot(clientDoc);
+
+      // Fetch client note
+      final noteDoc = await FirebaseFirestore.instance
+          .collection('admin_data')
+          .doc('client_notes')
+          .get();
+
+      String? clientNote;
+      if (noteDoc.exists) {
+        final notes = noteDoc.data();
+        clientNote = notes?[clientId];
+      }
+
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => ClientProfileSheet(
+          client: client,
+          clientNote: clientNote,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('خطأ في تحميل البيانات: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final arguments = ModalRoute.of(context)!.settings.arguments as Map;
@@ -83,7 +132,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         },
         builder: (context, state) {
           return Scaffold(
-            appBar: _buildAppBar(context, state, clientData),
+            appBar: _buildAppBar(context, state, clientData, clientId),
             body: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
@@ -107,6 +156,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     BuildContext context,
     AdminChatState state,
     Map<String, dynamic>? clientData,
+    String clientId,
   ) {
     if (state.isSelectionMode) {
       return AppBar(
@@ -143,54 +193,68 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
     return customAppBar(
       context,
-      Row(
-        children: [
-          if (clientData != null)
-            Container(
-              height: 40,
-              width: 40,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
-                image: DecorationImage(
-                  fit: BoxFit.cover,
-                  image: NetworkImage(clientData['imageUrl'] ?? ''),
+      GestureDetector(
+        onTap: () => _showClientProfile(clientId, clientData ?? {}),
+        child: Row(
+          children: [
+            if (clientData != null)
+              Hero(
+                tag: 'client_avatar_$clientId',
+                child: Container(
+                  height: 40,
+                  width: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                    image: clientData['imageUrl'] != null &&
+                            clientData['imageUrl'].toString().isNotEmpty
+                        ? DecorationImage(
+                            fit: BoxFit.cover,
+                            image: NetworkImage(clientData['imageUrl']),
+                          )
+                        : null,
+                  ),
+                  child: clientData['imageUrl'] == null ||
+                          clientData['imageUrl'].toString().isEmpty
+                      ? const Icon(Icons.person, color: Colors.white)
+                      : null,
                 ),
               ),
-            ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  clientData?['businessName'] ?? 'العميل',
-                  style: const TextStyle(
-                    color: whiteColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    clientData?['businessName'] ?? 'العميل',
+                    style: const TextStyle(
+                      color: whiteColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
-                ),
-                Text(
-                  'متصل الآن',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 12,
+                  Text(
+                    'اضغط للمزيد من المعلومات',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 11,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.white),
-            onPressed: () => context.read<AdminChatCubit>().toggleSearchMode(),
-          ),
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.white),
-            onPressed: () => _showMoreOptions(context),
-          ),
-        ],
+            IconButton(
+              icon: const Icon(Icons.search, color: Colors.white),
+              onPressed: () =>
+                  context.read<AdminChatCubit>().toggleSearchMode(),
+            ),
+            IconButton(
+              icon: const Icon(Icons.more_vert, color: Colors.white),
+              onPressed: () => _showMoreOptions(context),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -362,7 +426,6 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     final cubit = context.read<AdminChatCubit>();
     final state = context.watch<AdminChatCubit>().state;
 
-    // Admin's message if sender is NOT the clientId
     final bool isMe = message.senderId != cubit.clientId;
     final bool isSelected = state.selectedMessageIds.contains(message.id);
 
@@ -535,7 +598,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             MaterialPageRoute(
               builder: (context) => FullScreenImageViewer(
                 imageUrl: message.fileUrl!,
-                heroTag: heroTag,
+                clientName: '',
               ),
             ),
           );
@@ -719,6 +782,357 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         ),
       ),
     );
+  }
+}
+
+class ClientProfileSheet extends StatefulWidget {
+  final ClientModel client;
+  final String? clientNote;
+
+  const ClientProfileSheet({
+    super.key,
+    required this.client,
+    this.clientNote,
+  });
+
+  @override
+  State<ClientProfileSheet> createState() => _ClientProfileSheetState();
+}
+
+class _ClientProfileSheetState extends State<ClientProfileSheet> {
+  late TextEditingController _noteController;
+  bool _isSavingNote = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _noteController = TextEditingController(text: widget.clientNote ?? '');
+  }
+
+  Future<void> _saveNote() async {
+    setState(() {
+      _isSavingNote = true;
+    });
+
+    try {
+      final noteText = _noteController.text.trim();
+
+      if (noteText.isEmpty) {
+        await FirebaseFirestore.instance
+            .collection('admin_data')
+            .doc('client_notes')
+            .update({widget.client.uid: FieldValue.delete()});
+      } else {
+        await FirebaseFirestore.instance
+            .collection('admin_data')
+            .doc('client_notes')
+            .set(
+          {widget.client.uid: noteText},
+          SetOptions(merge: true),
+        );
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم حفظ الملاحظة')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('خطأ في حفظ الملاحظة: $e')),
+      );
+    } finally {
+      setState(() {
+        _isSavingNote = false;
+      });
+    }
+  }
+
+  String _formatDateTime(DateTime? dateTime) {
+    if (dateTime == null) return 'غير متوفر';
+    return DateFormat('dd/MM/yyyy hh:mm a', 'ar').format(dateTime);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.9,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(20),
+                  children: [
+                    Center(
+                      child: Hero(
+                        tag: 'client_avatar_${widget.client.uid}',
+                        child: Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: primaryColor, width: 3),
+                            image: widget.client.imageUrl != null &&
+                                    widget.client.imageUrl!.isNotEmpty
+                                ? DecorationImage(
+                                    fit: BoxFit.cover,
+                                    image:
+                                        NetworkImage(widget.client.imageUrl!),
+                                  )
+                                : null,
+                          ),
+                          child: widget.client.imageUrl == null ||
+                                  widget.client.imageUrl!.isEmpty
+                              ? const Icon(Icons.person, size: 50)
+                              : null,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: Text(
+                        widget.client.businessName,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Center(
+                      child: Text(
+                        widget.client.category,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    _buildInfoSection(
+                      'معلومات الاتصال',
+                      [
+                        _buildInfoRow(Icons.phone, 'الهاتف الأول',
+                            widget.client.phoneNumber),
+                        if (widget.client.secondPhoneNumber!.isNotEmpty)
+                          _buildInfoRow(Icons.phone, 'الهاتف الثاني',
+                              widget.client.secondPhoneNumber ?? ""),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInfoSection(
+                      'العنوان',
+                      [
+                        _buildInfoRow(Icons.location_city, 'المحافظة',
+                            widget.client.government),
+                        _buildInfoRow(
+                            Icons.location_on, 'المدينة', widget.client.town),
+                        _buildInfoRow(
+                            Icons.place, 'المنطقة', widget.client.area),
+                        if (widget.client.addressTyped.isNotEmpty)
+                          _buildInfoRow(Icons.edit_location, 'العنوان التفصيلي',
+                              widget.client.addressTyped),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    if (widget.client.geoLocation != null)
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          openMap(
+                            widget.client.geoLocation!.latitude,
+                            widget.client.geoLocation!.longitude,
+                          );
+                        },
+                        icon: const Icon(Icons.map, color: Colors.white),
+                        label: const Text('عرض الموقع على الخريطة',
+                            style: TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    const SizedBox(height: 16),
+                    _buildInfoSection(
+                      'التقارير',
+                      [
+                        _buildInfoRow(Icons.calendar_today, 'تاريخ الانضمام',
+                            _formatDateTime(widget.client.dateCreated)),
+                        _buildInfoRow(Icons.access_time, 'آخر نشاط',
+                            _formatDateTime(widget.client.lastTokenUpdate)),
+                        _buildInfoRow(
+                            Icons.shopping_cart,
+                            'حالة العربة',
+                            widget.client.fullCart == true
+                                ? 'ممتلئة'
+                                : 'فارغة'),
+                        _buildInfoRow(Icons.devices, 'عدد الأجهزة',
+                            widget.client.totalDevices?.toString() ?? '0'),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.amber.shade200),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.note, color: Colors.amber.shade700),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'ملاحظات',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _noteController,
+                            maxLines: 4,
+                            decoration: InputDecoration(
+                              hintText: 'أضف ملاحظاتك حول هذا العميل...',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: _isSavingNote ? null : _saveNote,
+                              icon: _isSavingNote
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.save, color: Colors.white),
+                              label: Text(
+                                _isSavingNote
+                                    ? 'جاري الحفظ...'
+                                    : 'حفظ الملاحظة',
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.amber.shade700,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildInfoSection(String title, List<Widget> children) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    if (value.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: primaryColor),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
   }
 }
 

@@ -21,6 +21,15 @@ class ClientModel extends Equatable {
   final Map<String, dynamic>? deviceInfo;
   final bool isSelected;
 
+  // NEW FIELDS for enhanced features
+  final DateTime? dateCreated;
+  final DateTime? lastUpdated;
+  final DateTime? cartStatusUpdatedAt;
+  final DateTime? lastReminderSentAt;
+  final bool? registrationComplete;
+  final bool? fullCart;
+  final String? lastCartReminder;
+
   const ClientModel({
     required this.id,
     required this.businessName,
@@ -40,6 +49,14 @@ class ClientModel extends Equatable {
     this.lastTokenUpdate,
     this.deviceInfo,
     this.isSelected = false,
+    // NEW FIELDS
+    this.dateCreated,
+    this.lastUpdated,
+    this.cartStatusUpdatedAt,
+    this.lastReminderSentAt,
+    this.registrationComplete,
+    this.fullCart,
+    this.lastCartReminder,
   });
 
   // Convenience getters
@@ -72,6 +89,14 @@ class ClientModel extends Equatable {
     DateTime? lastTokenUpdate,
     Map<String, dynamic>? deviceInfo,
     bool? isSelected,
+    // NEW FIELDS
+    DateTime? dateCreated,
+    DateTime? lastUpdated,
+    DateTime? cartStatusUpdatedAt,
+    DateTime? lastReminderSentAt,
+    bool? registrationComplete,
+    bool? fullCart,
+    String? lastCartReminder,
   }) {
     return ClientModel(
       id: id ?? this.id,
@@ -92,6 +117,14 @@ class ClientModel extends Equatable {
       lastTokenUpdate: lastTokenUpdate ?? this.lastTokenUpdate,
       deviceInfo: deviceInfo ?? this.deviceInfo,
       isSelected: isSelected ?? this.isSelected,
+      // NEW FIELDS
+      dateCreated: dateCreated ?? this.dateCreated,
+      lastUpdated: lastUpdated ?? this.lastUpdated,
+      cartStatusUpdatedAt: cartStatusUpdatedAt ?? this.cartStatusUpdatedAt,
+      lastReminderSentAt: lastReminderSentAt ?? this.lastReminderSentAt,
+      registrationComplete: registrationComplete ?? this.registrationComplete,
+      fullCart: fullCart ?? this.fullCart,
+      lastCartReminder: lastCartReminder ?? this.lastCartReminder,
     );
   }
 
@@ -145,6 +178,18 @@ class ClientModel extends Equatable {
     return null;
   }
 
+  /// Helper to parse bool safely
+  static bool? _parseBool(dynamic value) {
+    if (value == null) return null;
+    if (value is bool) return value;
+    if (value is String) {
+      if (value.toLowerCase() == 'true') return true;
+      if (value.toLowerCase() == 'false') return false;
+    }
+    if (value is int) return value != 0;
+    return null;
+  }
+
   /// Factory from DocumentSnapshot (for Firestore queries)
   factory ClientModel.fromDocumentSnapshot(DocumentSnapshot doc) {
     final raw = doc.data();
@@ -174,7 +219,7 @@ class ClientModel extends Equatable {
       area: (data['area'] ?? '') as String,
       addressTyped: (data['addressTyped'] ?? '') as String,
       imageUrl: data['imageUrl']?.toString(),
-      uid: (data['uid'] ?? '') as String,
+      uid: (data['uid'] ?? docId) as String, // Use docId as fallback for uid
       fcmTokens: _parseTokens(data['fcmTokens']),
       lastActiveToken: data['lastActiveToken']?.toString(),
       totalDevices: _parseInt(data['totalDevices']),
@@ -183,6 +228,15 @@ class ClientModel extends Equatable {
           : null,
       lastTokenUpdate: _parseDateTime(data['lastTokenUpdate']),
       deviceInfo: _parseMap(data['deviceInfo']),
+      isSelected: false, // Always default to false when loading from DB
+      // NEW FIELDS
+      dateCreated: _parseDateTime(data['dateCreated']),
+      lastUpdated: _parseDateTime(data['lastUpdated']),
+      cartStatusUpdatedAt: _parseDateTime(data['cartStatusUpdatedAt']),
+      lastReminderSentAt: _parseDateTime(data['lastReminderSentAt']),
+      registrationComplete: _parseBool(data['registrationComplete']),
+      fullCart: _parseBool(data['fullCart']),
+      lastCartReminder: data['lastCartReminder']?.toString(),
     );
   }
 
@@ -210,8 +264,25 @@ class ClientModel extends Equatable {
       'lastTokenUpdate':
           lastTokenUpdate != null ? Timestamp.fromDate(lastTokenUpdate!) : null,
       'deviceInfo': deviceInfo,
+      // NEW FIELDS
+      'dateCreated':
+          dateCreated != null ? Timestamp.fromDate(dateCreated!) : null,
+      'lastUpdated':
+          lastUpdated != null ? Timestamp.fromDate(lastUpdated!) : null,
+      'cartStatusUpdatedAt': cartStatusUpdatedAt != null
+          ? Timestamp.fromDate(cartStatusUpdatedAt!)
+          : null,
+      'lastReminderSentAt': lastReminderSentAt != null
+          ? Timestamp.fromDate(lastReminderSentAt!)
+          : null,
+      'registrationComplete': registrationComplete,
+      'fullCart': fullCart,
+      'lastCartReminder': lastCartReminder,
     };
   }
+
+  /// Alias for toFirestore for consistency with old code
+  Map<String, dynamic> toMap() => toFirestore();
 
   @override
   List<Object?> get props => [
@@ -233,5 +304,13 @@ class ClientModel extends Equatable {
         lastTokenUpdate,
         deviceInfo,
         isSelected,
+        // NEW FIELDS
+        dateCreated,
+        lastUpdated,
+        cartStatusUpdatedAt,
+        lastReminderSentAt,
+        registrationComplete,
+        fullCart,
+        lastCartReminder,
       ];
 }

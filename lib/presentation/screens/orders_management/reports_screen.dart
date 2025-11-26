@@ -5,6 +5,7 @@ import 'package:csv/csv.dart';
 import 'package:goods_admin/business%20logic/cubits/reports_cubit/reports_cubit.dart';
 import 'package:goods_admin/business%20logic/cubits/reports_cubit/reports_state.dart';
 import 'package:goods_admin/presentation/cards/summary_card.dart';
+import 'package:goods_admin/presentation/custom_widgets/custom_app_bar%20copy.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -16,14 +17,21 @@ class ReportsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('التقارير والإحصائيات'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.download),
-            onPressed: () => _showExportDialog(context),
-          ),
-        ],
+      appBar: customAppBar(
+        context,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'التقارير والإحصائيات',
+              style: TextStyle(color: Colors.white),
+            ),
+            IconButton(
+              icon: const Icon(Icons.download),
+              onPressed: () => _showExportDialog(context),
+            ),
+          ],
+        ),
       ),
       body: BlocBuilder<ReportsCubit, ReportsState>(
         builder: (context, state) {
