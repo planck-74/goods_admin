@@ -9,40 +9,92 @@ part 'batch_operations_state.dart';
 
 class BatchOperationsCubit extends Cubit<BatchOperationsState> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirestoreServicesCubit _firestoreServicesCubit;
 
-  BatchOperationsCubit() : super(BatchOperationsInitial());
+  BatchOperationsCubit(this._firestoreServicesCubit)
+      : super(BatchOperationsInitial());
 
+  /// Update static fields with store sync
   Future<void> batchUpdateProducts({
     required List<Product> products,
     required Map<String, dynamic> updates,
     required BuildContext context,
   }) async {
     if (products.isEmpty || updates.isEmpty) {
+      debugPrint('❌ batchUpdateProducts: No products or updates to process');
       emit(BatchOperationsError('لا توجد منتجات أو تحديثات للمعالجة'));
       return;
     }
+
+    debugPrint(
+        '🔄 batchUpdateProducts: Starting update for ${products.length} products');
+    debugPrint('📝 Updates to apply: $updates');
 
     emit(BatchOperationsLoading());
 
     try {
       final batch = _firestore.batch();
 
+      // Update main products collection
+      debugPrint('📦 Updating main products collection...');
       for (final product in products) {
         final docRef = _firestore.collection('products').doc(product.productId);
         batch.update(docRef, {
           ...updates,
           'updatedAt': FieldValue.serverTimestamp(),
         });
-        syncStoreProductsByIds(context, storeId, [product.productId]);
+        debugPrint(
+            '  ✓ Queued update for product: ${product.name} (${product.productId})');
       }
 
       await batch.commit();
+      debugPrint('✅ Main products collection updated successfully');
 
-      emit(BatchOperationsSuccess(
-        message: 'تم تحديث ${products.length} منتج بنجاح',
-        affectedCount: products.length,
-      ));
+      // Sync to all stores
+      debugPrint('🔄 Starting sync to stores...');
+      final productsStaticData = <String, Map<String, dynamic>>{};
+      for (final product in products) {
+        productsStaticData[product.productId] = {
+          'name': product.name,
+          'classification': updates['classification'] ?? product.classification,
+          'imageUrl': updates['imageUrl'] ?? product.imageUrl,
+          'manufacturer': updates['manufacturer'] ?? product.manufacturer,
+          'size': updates['size'] ?? product.size,
+          'package': updates['package'] ?? product.package,
+          'note': updates['note'] ?? product.note,
+        };
+        debugPrint('  📋 Prepared static data for: ${product.name}');
+        debugPrint(
+            '     - Classification: ${productsStaticData[product.productId]!['classification']}');
+        debugPrint(
+            '     - Size: ${productsStaticData[product.productId]!['size']}');
+        debugPrint(
+            '     - Package: ${productsStaticData[product.productId]!['package']}');
+      }
+
+      final syncResult =
+          await _firestoreServicesCubit.syncMultipleProductsToAllStores(
+        products.map((p) => p.productId).toList(),
+        productsStaticData,
+      );
+
+      if (syncResult.success) {
+        debugPrint('✅ Sync completed successfully!');
+        debugPrint('   Total updates in stores: ${syncResult.totalUpdates}');
+        debugPrint('   Updates per product: ${syncResult.productUpdateCounts}');
+        emit(BatchOperationsSuccess(
+          message:
+              'تم تحديث ${products.length} منتج وتمت المزامنة مع ${syncResult.totalUpdates} منتج في المتاجر',
+          affectedCount: products.length,
+        ));
+      } else {
+        debugPrint('⚠️ Sync failed: ${syncResult.error}');
+        emit(BatchOperationsError(
+            'تم التحديث لكن فشلت المزامنة: ${syncResult.error}'));
+      }
     } catch (e) {
+      debugPrint('❌ Error in batchUpdateProducts: $e');
+      debugPrint('Stack trace: ${StackTrace.current}');
       emit(BatchOperationsError('حدث خطأ أثناء التحديث المجمع: $e'));
     }
   }
@@ -52,28 +104,97 @@ class BatchOperationsCubit extends Cubit<BatchOperationsState> {
     required BuildContext context,
   }) async {
     if (products.isEmpty) {
+      debugPrint('❌ batchDeleteProducts: No products to delete');
       emit(BatchOperationsError('لا توجد منتجات للحذف'));
       return;
     }
 
+    debugPrint(
+        '🗑️ batchDeleteProducts: Starting deletion for ${products.length} products');
     emit(BatchOperationsLoading());
 
     try {
       final batch = _firestore.batch();
 
+      // Delete from main collection
+      debugPrint('📦 Deleting from main products collection...');
       for (final product in products) {
         final docRef = _firestore.collection('products').doc(product.productId);
         batch.delete(docRef);
-        syncStoreProductsByIds(context, storeId, [product.productId]);
+        debugPrint(
+            '  ✓ Queued deletion for: ${product.name} (${product.productId})');
       }
 
       await batch.commit();
+      debugPrint('✅ Main products collection deletion completed');
 
+      // Get store IDs from admin_data
+      debugPrint('🔍 Fetching store IDs from admin_data/storesIDs...');
+      final storesIDsDoc =
+          await _firestore.collection('admin_data').doc('storesIDs').get();
+
+      if (!storesIDsDoc.exists || storesIDsDoc.data()?['storesIDs'] == null) {
+        debugPrint('⚠️ No store IDs found, skipping store deletion');
+        emit(BatchOperationsSuccess(
+          message: 'تم حذف ${products.length} منتج من المجموعة الرئيسية',
+          affectedCount: products.length,
+        ));
+        return;
+      }
+
+      final List<String> storeIDs =
+          List<String>.from(storesIDsDoc.data()!['storesIDs']);
+      debugPrint('✅ Found ${storeIDs.length} store IDs');
+
+      // Delete from all stores
+      debugPrint('🏪 Starting deletion from stores...');
+      int totalDeleted = 0;
+
+      for (String storeId in storeIDs) {
+        debugPrint('  🏪 Processing store: $storeId');
+
+        WriteBatch storeBatch = _firestore.batch();
+        int storeDeleteCount = 0;
+
+        for (final product in products) {
+          final storeProductsRef = _firestore
+              .collection('stores')
+              .doc(storeId)
+              .collection('products');
+
+          final productsSnapshot = await storeProductsRef
+              .where('productId', isEqualTo: product.productId)
+              .get();
+
+          debugPrint(
+              '     Found ${productsSnapshot.docs.length} instances of ${product.name} in store $storeId');
+
+          for (var doc in productsSnapshot.docs) {
+            storeBatch.delete(doc.reference);
+            storeDeleteCount++;
+            totalDeleted++;
+            debugPrint('       ✓ Queued deletion: ${doc.id}');
+          }
+        }
+
+        if (storeDeleteCount > 0) {
+          await storeBatch.commit();
+          debugPrint(
+              '  ✅ Deleted $storeDeleteCount products from store $storeId');
+        } else {
+          debugPrint('  ℹ️ No products found in store $storeId');
+        }
+      }
+
+      debugPrint(
+          '✅ Batch deletion completed! Total deleted from stores: $totalDeleted');
       emit(BatchOperationsSuccess(
-        message: 'تم حذف ${products.length} منتج بنجاح',
+        message: 'تم حذف ${products.length} منتج من جميع المتاجر بنجاح',
         affectedCount: products.length,
       ));
     } catch (e) {
+      debugPrint('❌ Error in batchDeleteProducts: $e');
+      debugPrint('Stack trace: ${StackTrace.current}');
       emit(BatchOperationsError('حدث خطأ أثناء الحذف المجمع: $e'));
     }
   }
@@ -112,37 +233,100 @@ class BatchOperationsCubit extends Cubit<BatchOperationsState> {
     );
   }
 
+  /// Bulk price update - ONLY updates stores, not main products collection
   Future<void> bulkPriceUpdate({
     required List<Product> products,
     required double multiplier,
     required BuildContext context,
   }) async {
     if (products.isEmpty || multiplier <= 0) {
+      debugPrint(
+          '❌ bulkPriceUpdate: Invalid input - products: ${products.length}, multiplier: $multiplier');
       emit(BatchOperationsError('المدخلات غير صحيحة'));
       return;
     }
 
+    debugPrint(
+        '💰 bulkPriceUpdate: Starting price update for ${products.length} products with multiplier $multiplier');
     emit(BatchOperationsLoading());
 
     try {
-      final batch = _firestore.batch();
+      // Get store IDs from admin_data
+      debugPrint('🔍 Fetching store IDs from admin_data/storesIDs...');
+      final storesIDsDoc =
+          await _firestore.collection('admin_data').doc('storesIDs').get();
 
-      for (final product in products) {
-        final docRef = _firestore.collection('products').doc(product.productId);
-
-        batch.update(docRef, {
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-        syncStoreProductsByIds(context, storeId, [product.productId]);
+      if (!storesIDsDoc.exists || storesIDsDoc.data()?['storesIDs'] == null) {
+        debugPrint('⚠️ No store IDs found');
+        emit(BatchOperationsError('لا توجد متاجر لتحديث الأسعار'));
+        return;
       }
 
-      await batch.commit();
+      final List<String> storeIDs =
+          List<String>.from(storesIDsDoc.data()!['storesIDs']);
+      debugPrint('🏪 Found ${storeIDs.length} stores to update');
 
+      int totalUpdated = 0;
+
+      for (String storeId in storeIDs) {
+        debugPrint('  🏪 Processing store: $storeId');
+
+        WriteBatch batch = _firestore.batch();
+        int batchCount = 0;
+
+        for (final product in products) {
+          final storeProductsRef = _firestore
+              .collection('stores')
+              .doc(storeId)
+              .collection('products');
+
+          final productsSnapshot = await storeProductsRef
+              .where('productId', isEqualTo: product.productId)
+              .get();
+
+          debugPrint(
+              '     Found ${productsSnapshot.docs.length} instances of ${product.name} in store $storeId');
+
+          for (var doc in productsSnapshot.docs) {
+            final currentPrice = (doc.data()['price'] ?? 0).toDouble();
+            final newPrice = (currentPrice * multiplier).round();
+
+            debugPrint(
+                '       Updating price: $currentPrice → $newPrice (${doc.id})');
+
+            batch.update(doc.reference, {
+              'price': newPrice,
+              'updatedAt': FieldValue.serverTimestamp(),
+            });
+
+            totalUpdated++;
+            batchCount++;
+
+            if (batchCount >= 500) {
+              await batch.commit();
+              debugPrint(
+                  '     ✅ Committed batch of $batchCount updates in store $storeId');
+              batch = _firestore.batch();
+              batchCount = 0;
+            }
+          }
+        }
+
+        if (batchCount > 0) {
+          await batch.commit();
+          debugPrint(
+              '  ✅ Committed final batch of $batchCount updates in store $storeId');
+        }
+      }
+
+      debugPrint('✅ Bulk price update completed! Total updated: $totalUpdated');
       emit(BatchOperationsSuccess(
-        message: 'تم تحديث أسعار ${products.length} منتج بنجاح',
-        affectedCount: products.length,
+        message: 'تم تحديث أسعار $totalUpdated منتج في المتاجر بنجاح',
+        affectedCount: totalUpdated,
       ));
     } catch (e) {
+      debugPrint('❌ Error in bulkPriceUpdate: $e');
+      debugPrint('Stack trace: ${StackTrace.current}');
       emit(BatchOperationsError('حدث خطأ أثناء تحديث الأسعار: $e'));
     }
   }
@@ -200,7 +384,6 @@ class BatchOperationsCubit extends Cubit<BatchOperationsState> {
         );
 
         batch.set(docRef, duplicatedProduct.toMap());
-        syncStoreProductsByIds(context, storeId, [product.productId]);
       }
 
       await batch.commit();

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
+import 'package:goods_admin/business%20logic/cubits/firestore_services_cubit/firestore_services_state.dart';
 import 'package:goods_admin/presentation/dialogs/batch_edit_dialog.dart';
 import 'package:goods_admin/presentation/screens/custom_image_cropper.dart';
 import 'package:goods_admin/presentation/sheets/edit_products_sheet.dart';
@@ -445,6 +446,9 @@ Future<void> showImageOptionsDialog(BuildContext context,
   );
 }
 
+// Keep all image processing functions as they are...
+// [Previous image processing functions remain unchanged]
+
 class EditProducts extends StatefulWidget {
   const EditProducts({super.key});
 
@@ -458,11 +462,11 @@ class _EditProductsState extends State<EditProducts> {
   bool _isSearching = false;
   bool _isBatchMode = false;
   Set<String> _selectedProductIds = <String>{};
+  bool _isSyncing = false;
 
   @override
   void initState() {
     super.initState();
-    // Only fetch if cache is empty
     final fetchCubit = context.read<FetchProductsCubit>();
     if (fetchCubit.cachedProducts.isEmpty) {
       fetchCubit.fetchProducts();
@@ -517,7 +521,6 @@ class _EditProductsState extends State<EditProducts> {
       return;
     }
 
-    // Get selected products that have images
     final allProducts = _searchResults ??
         (context.read<FetchProductsCubit>().state is FetchProductsLoaded
             ? (context.read<FetchProductsCubit>().state as FetchProductsLoaded)
@@ -571,6 +574,7 @@ class _EditProductsState extends State<EditProducts> {
           border: OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(10)),
           ),
+          prefixIcon: Icon(Icons.search, size: 20),
         ),
         onChanged: _searchProducts,
       ),
@@ -587,19 +591,53 @@ class _EditProductsState extends State<EditProducts> {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      color: primaryColor.withOpacity(0.1),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            primaryColor.withOpacity(0.1),
+            primaryColor.withOpacity(0.05)
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        border: Border(
+          bottom: BorderSide(color: primaryColor.withOpacity(0.3)),
+        ),
+      ),
       child: Column(
         children: [
           Row(
             children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: primaryColor,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${_selectedProductIds.length} محدد',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
               Text(
-                'تم اختيار ${_selectedProductIds.length} من ${products.length}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                'من ${products.length}',
+                style: TextStyle(color: Colors.grey[600]),
               ),
               const Spacer(),
-              TextButton(
+              TextButton.icon(
                 onPressed: () => _selectAllProducts(products),
-                child: Text(
+                icon: Icon(
+                  _selectedProductIds.length == products.length
+                      ? Icons.deselect
+                      : Icons.select_all,
+                  size: 18,
+                ),
+                label: Text(
                   _selectedProductIds.length == products.length
                       ? 'إلغاء الكل'
                       : 'اختيار الكل',
@@ -608,27 +646,44 @@ class _EditProductsState extends State<EditProducts> {
             ],
           ),
           if (_selectedProductIds.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                ElevatedButton.icon(
-                  onPressed: () => _showBatchEditDialog(products),
-                  icon: const Icon(Icons.edit, color: Colors.white),
-                  label: const Text('تعديل البيانات',
-                      style: TextStyle(color: Colors.white)),
-                  style:
-                      ElevatedButton.styleFrom(backgroundColor: primaryColor),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showBatchEditDialog(products),
+                    icon: const Icon(Icons.edit, color: Colors.white, size: 18),
+                    label: const Text(
+                      'تعديل البيانات',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
                 ),
-                ElevatedButton.icon(
-                  onPressed:
-                      productsWithImages > 0 ? _showMultipleCropDialog : null,
-                  icon: const Icon(Icons.crop, color: Colors.white),
-                  label: Text('اقتصاص الصور ($productsWithImages)',
-                      style: const TextStyle(color: Colors.white)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        productsWithImages > 0 ? Colors.green : Colors.grey,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed:
+                        productsWithImages > 0 ? _showMultipleCropDialog : null,
+                    icon: const Icon(Icons.crop, color: Colors.white, size: 18),
+                    label: Text(
+                      'اقتصاص ($productsWithImages)',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          productsWithImages > 0 ? Colors.green : Colors.grey,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -658,7 +713,6 @@ class _EditProductsState extends State<EditProducts> {
       debugPrint("Old image deleted successfully");
     } catch (e) {
       debugPrint("Error deleting old image: $e");
-      // Don't throw error - deletion failure shouldn't block the upload process
     }
   }
 
@@ -673,7 +727,6 @@ class _EditProductsState extends State<EditProducts> {
 
     setState(() => _isSearching = true);
 
-    // Use cached search instead of Firestore query
     final fetchCubit = context.read<FetchProductsCubit>();
     final results = fetchCubit.searchInCachedProducts(query);
 
@@ -683,34 +736,46 @@ class _EditProductsState extends State<EditProducts> {
     });
   }
 
-  // Updated refresh method - only refetch when explicitly needed
   Future<void> _refreshSearchResults({bool forceRefetch = false}) async {
     if (forceRefetch) {
-      // Only refetch from Firestore when explicitly requested (like pull-to-refresh)
       await context.read<FetchProductsCubit>().fetchProducts();
     }
 
-    // Update search results with current cache
     if (_searchController.text.isNotEmpty) {
       await _searchProducts(_searchController.text);
     }
   }
 
-  // Image update method - optimized to update locally
   Future<void> _updateProductImage(Product product, File newImage) async {
     bool loadingShowing = false;
 
     try {
+      setState(() => _isSyncing = true);
+
       loadingShowing = true;
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (loadingContext) => const Center(
-          child: CircularProgressIndicator(),
+        builder: (loadingContext) => Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          child: const Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 20),
+                Text(
+                  'جاري رفع الصورة...',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
         ),
       );
 
-      // Upload new image
       String? newImageUrl = await uploadImage(newImage, product.productId);
 
       if (newImageUrl != null) {
@@ -718,7 +783,6 @@ class _EditProductsState extends State<EditProducts> {
           await deleteOldImage(product.imageUrl);
         }
 
-        // Create updated product
         Product updatedProduct = Product(
           name: product.name,
           manufacturer: product.manufacturer,
@@ -731,14 +795,16 @@ class _EditProductsState extends State<EditProducts> {
           productId: product.productId,
         );
 
-        // Update in Firestore and local cache
         if (context.mounted) {
-          context
-              .read<FirestoreServicesCubit>()
-              .updateProduct(context, updatedProduct);
+          // Close upload dialog
+          Navigator.of(context).pop();
+          loadingShowing = false;
+
+          // Update product (this will show sync dialog automatically)
+          await context.read<FirestoreServicesCubit>().updateProduct(context,
+              updatedProduct, FetchProductsCubit as FetchProductsCubit);
         }
 
-        // Update search results if active
         if (_searchResults != null) {
           setState(() {
             _searchResults = _searchResults!.map((p) {
@@ -748,15 +814,6 @@ class _EditProductsState extends State<EditProducts> {
               return p;
             }).toList();
           });
-        }
-
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('تم تحديث الصورة بنجاح'),
-              backgroundColor: Colors.green,
-            ),
-          );
         }
       } else {
         if (context.mounted) {
@@ -779,6 +836,7 @@ class _EditProductsState extends State<EditProducts> {
         );
       }
     } finally {
+      setState(() => _isSyncing = false);
       if (loadingShowing && context.mounted) {
         try {
           Navigator.of(context).pop();
@@ -793,23 +851,60 @@ class _EditProductsState extends State<EditProducts> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('تأكيد الحذف'),
-        content: Text('هل أنت متأكد من حذف المنتج "${product.name}"؟'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red),
+            SizedBox(width: 8),
+            Text('تأكيد الحذف'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('هل أنت متأكد من حذف المنتج:'),
+            const SizedBox(height: 8),
+            Text(
+              '"${product.name}"',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.orange[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: Colors.orange),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'لن يتم حذف المنتج من المتاجر تلقائياً',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child: const Text('إلغاء'),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () async {
               Navigator.of(ctx).pop();
 
-              // Delete from Firestore and update local cache
               await context
                   .read<FirestoreServicesCubit>()
                   .deleteProduct(context, product);
 
-              // Update search results if active
               if (_searchResults != null) {
                 setState(() {
                   _searchResults = _searchResults!
@@ -821,11 +916,14 @@ class _EditProductsState extends State<EditProducts> {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content: Text('تم حذف المنتج "${product.name}" بنجاح')),
+                    content: Text('تم حذف "${product.name}" بنجاح'),
+                    backgroundColor: Colors.green,
+                  ),
                 );
               }
             },
-            child: const Text('حذف', style: TextStyle(color: Colors.red)),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('حذف', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -836,18 +934,20 @@ class _EditProductsState extends State<EditProducts> {
     return Container(
       decoration: BoxDecoration(
         color: isSelected ? primaryColor.withOpacity(0.1) : whiteColor,
-        borderRadius: BorderRadius.circular(10),
-        border: isSelected ? Border.all(color: primaryColor, width: 2) : null,
+        borderRadius: BorderRadius.circular(12),
+        border: isSelected
+            ? Border.all(color: primaryColor, width: 2)
+            : Border.all(color: Colors.grey[300]!),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withOpacity(0.05),
             spreadRadius: 1,
-            blurRadius: 2,
+            blurRadius: 4,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(12),
       child: Row(
         children: [
           if (_isBatchMode)
@@ -855,6 +955,9 @@ class _EditProductsState extends State<EditProducts> {
               value: isSelected,
               onChanged: (_) => _toggleProductSelection(product.productId),
               activeColor: primaryColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
             ),
           GestureDetector(
             onTap: () async {
@@ -864,39 +967,44 @@ class _EditProductsState extends State<EditProducts> {
                   if (newImage != null && context.mounted) {
                     await _updateProductImage(product, newImage);
                   }
+                  ;
                 });
               }
             },
-            child: SizedBox(
+            child: Container(
               height: 100,
               width: 100,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: CachedNetworkImage(
                   imageUrl: product.imageUrl,
                   fit: BoxFit.contain,
                   placeholder: (context, url) => Container(
-                    color: Colors.grey[200],
+                    color: Colors.grey[100],
                     child: const Center(
-                        child: CircularProgressIndicator(strokeWidth: 2)),
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   ),
                   errorWidget: (context, url, error) => Container(
-                    color: Colors.grey[300],
-                    child: const Icon(Icons.image_not_supported),
+                    color: Colors.grey[200],
+                    child: const Icon(Icons.image_not_supported,
+                        color: Colors.grey),
                   ),
                 ),
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Container(height: 120, width: 1, color: darkBlueColor),
-          ),
+          const SizedBox(width: 12),
           Expanded(child: _buildProductDetails(product)),
           if (!_isBatchMode)
             IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
               onPressed: () => _showDeleteConfirmationDialog(context, product),
+              tooltip: 'حذف المنتج',
             ),
         ],
       ),
@@ -908,27 +1016,46 @@ class _EditProductsState extends State<EditProducts> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 5),
-        Text('شركة: ${product.manufacturer}',
-            style: const TextStyle(fontSize: 14)),
-        const SizedBox(height: 5),
+        Text(
+          product.name,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 6),
+        _buildDetailRow(Icons.business, product.manufacturer),
         if (product.size?.isNotEmpty ?? false)
-          Text('الحجم: ${product.size}', style: const TextStyle(fontSize: 14)),
-        const SizedBox(height: 5),
-        Text('العبوة: ${product.package}',
-            style: const TextStyle(fontSize: 14)),
-        const SizedBox(height: 5),
-        Text('التصنيف: ${product.classification}',
-            style: const TextStyle(fontSize: 14)),
-        const SizedBox(height: 5),
-        Text('عدد البيعات: ${product.salesCount}',
-            style: const TextStyle(fontSize: 14)),
-        if (product.note?.isNotEmpty ?? false) ...[
-          const SizedBox(height: 5),
-          Text('ملحوظة: ${product.note}', style: const TextStyle(fontSize: 14)),
-        ],
+          _buildDetailRow(Icons.straighten, product.size!),
+        _buildDetailRow(Icons.inventory_2_outlined, product.package),
+        _buildDetailRow(Icons.category_outlined, product.classification),
+        _buildDetailRow(
+            Icons.trending_up, '${product.salesCount} مبيعة', Colors.green),
+        if (product.note?.isNotEmpty ?? false)
+          _buildDetailRow(Icons.notes, product.note!, Colors.orange),
       ],
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String text, [Color? color]) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: color ?? Colors.grey[600]),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 13, color: color ?? Colors.grey[800]),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -938,13 +1065,14 @@ class _EditProductsState extends State<EditProducts> {
         _buildBatchModeHeader(products),
         Expanded(
           child: ListView.builder(
+            padding: const EdgeInsets.all(8),
             itemCount: products.length,
             itemBuilder: (context, index) {
               Product product = products[index];
               bool isSelected = _selectedProductIds.contains(product.productId);
 
               return Padding(
-                padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 0),
+                padding: const EdgeInsets.only(bottom: 8),
                 child: GestureDetector(
                   onTap: () {
                     if (_isBatchMode) {
@@ -979,35 +1107,81 @@ class _EditProductsState extends State<EditProducts> {
                 color: whiteColor,
               ),
               onPressed: _toggleBatchMode,
+              tooltip: _isBatchMode ? 'إلغاء التحديد' : 'تحديد متعدد',
             ),
           ],
         ),
       ),
-      body: _isSearching
-          ? const Center(child: CircularProgressIndicator())
-          : _searchResults != null
-              ? RefreshIndicator(
-                  onRefresh: () => _refreshSearchResults(forceRefetch: true),
-                  child: _buildProductList(_searchResults!),
-                )
-              : BlocBuilder<FetchProductsCubit, FetchProductsState>(
-                  builder: (context, state) {
-                    if (state is FetchProductsLoading) {
-                      return const Center(
-                        child: CircularProgressIndicator(color: primaryColor),
-                      );
-                    } else if (state is FetchProductsLoaded) {
-                      return RefreshIndicator(
-                        onRefresh: () =>
-                            _refreshSearchResults(forceRefetch: true),
-                        child: _buildProductList(state.products),
-                      );
-                    } else if (state is FetchProductsError) {
-                      return Center(child: Text(state.message));
-                    }
-                    return const SizedBox();
-                  },
-                ),
+      body: Stack(
+        children: [
+          _isSearching
+              ? const Center(child: CircularProgressIndicator())
+              : _searchResults != null
+                  ? RefreshIndicator(
+                      onRefresh: () =>
+                          _refreshSearchResults(forceRefetch: true),
+                      child: _buildProductList(_searchResults!),
+                    )
+                  : BlocBuilder<FetchProductsCubit, FetchProductsState>(
+                      builder: (context, state) {
+                        if (state is FetchProductsLoading) {
+                          return const Center(
+                            child:
+                                CircularProgressIndicator(color: primaryColor),
+                          );
+                        } else if (state is FetchProductsLoaded) {
+                          return RefreshIndicator(
+                            onRefresh: () =>
+                                _refreshSearchResults(forceRefetch: true),
+                            child: _buildProductList(state.products),
+                          );
+                        } else if (state is FetchProductsError) {
+                          return Center(child: Text(state.message));
+                        }
+                        return const SizedBox();
+                      },
+                    ),
+          if (_isSyncing)
+            Container(
+              color: Colors.black26,
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          BlocBuilder<FirestoreServicesCubit, FirestoreServicesState>(
+            builder: (context, state) {
+              if (state is FirestoreServicesLoading) {
+                return Container(
+                  color: Colors.black54,
+                  child: const Center(
+                    child: Card(
+                      margin: EdgeInsets.all(20),
+                      child: Padding(
+                        padding: EdgeInsets.all(24.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 16),
+                            Text(
+                              'جاري التحديث والمزامنة...',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -1018,6 +1192,8 @@ class _EditProductsState extends State<EditProducts> {
   }
 }
 
+// Keep all other classes and functions (MultipleCropDialog, etc.) as they were...
+// Keep all other classes and functions (MultipleCropDialog, etc.) as they were...
 class MultipleCropDialog extends StatefulWidget {
   final List<Product> products;
   final VoidCallback onComplete;
@@ -1300,4 +1476,56 @@ Future<File?> cropExistingImageForBatch(
     debugPrint("Error in cropExistingImageForBatch for $productName: $e");
     return null;
   }
+}
+
+Future<void> syncStoreProductsByIds(
+  BuildContext context,
+  String storeId,
+  List<String> productDocIds,
+) async {
+  try {
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+    WriteBatch batch = firestore.batch();
+    int updatedCount = 0;
+
+    for (String storeProductId in productDocIds) {
+      final storeDocRef = firestore
+          .collection('stores')
+          .doc(storeId)
+          .collection('products')
+          .doc(storeProductId);
+
+      final storeDoc = await storeDocRef.get();
+
+      if (!storeDoc.exists) {
+        continue;
+      }
+
+      final storeProduct = storeDoc.data()!;
+      final mainProductId = storeProduct['productId'];
+
+      final mainProductDoc =
+          await firestore.collection('products').doc(mainProductId).get();
+
+      if (mainProductDoc.exists) {
+        final mainProduct = mainProductDoc.data()!;
+
+        final updatedData = {
+          ...storeProduct,
+          'name': mainProduct['name'],
+          'classification': mainProduct['classification'],
+          'imageUrl': mainProduct['imageUrl'],
+          'manufacturer': mainProduct['manufacturer'],
+          'size': mainProduct['size'],
+          'package': mainProduct['package'],
+          'note': mainProduct['note'],
+        };
+
+        batch.update(storeDocRef, updatedData);
+        updatedCount++;
+      } else {}
+    }
+
+    await batch.commit();
+  } catch (e) {}
 }

@@ -13,14 +13,14 @@ import 'package:goods_admin/data/models/client_model.dart';
 import 'package:goods_admin/presentation/custom_widgets/custom_app_bar%20copy.dart';
 import 'package:intl/intl.dart';
 
-class EditClients extends StatefulWidget {
-  const EditClients({super.key});
+class ClientsScreen extends StatefulWidget {
+  const ClientsScreen({super.key});
 
   @override
-  State<EditClients> createState() => _EditClientsState();
+  State<ClientsScreen> createState() => _ClientsScreenState();
 }
 
-class _EditClientsState extends State<EditClients> {
+class _ClientsScreenState extends State<ClientsScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<ClientModel>? _searchResults;
   bool _isSearching = false;

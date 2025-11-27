@@ -315,7 +315,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
               'إدارة حسابات العملاء',
               Icons.people_rounded,
               AppColors.warmGradient,
-              '/EditClients',
+              '/ClientsScreen',
             ),
             _buildManagementListItem(
               context,

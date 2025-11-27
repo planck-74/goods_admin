@@ -13,7 +13,7 @@ import 'package:goods_admin/presentation/screens/auth_screens/sign_in.dart';
 import 'package:goods_admin/presentation/screens/carousel_admin_screen.dart';
 import 'package:goods_admin/presentation/screens/chat_screens/chat_screen.dart';
 import 'package:goods_admin/presentation/screens/chat_screens/contact_screen.dart';
-import 'package:goods_admin/presentation/screens/edit_clients.dart';
+import 'package:goods_admin/presentation/screens/clients_screen.dart';
 import 'package:goods_admin/presentation/screens/edit_products.dart';
 import 'package:goods_admin/presentation/screens/edit_products_classification.dart';
 import 'package:goods_admin/presentation/screens/home.dart';
@@ -37,7 +37,7 @@ final Map<String, WidgetBuilder> routes = {
   '/AddProduct': (context) => const AddProduct(),
   '/EditProductsClassification': (context) =>
       const EditProductsClassification(),
-  '/EditClients': (context) => const EditClients(),
+  '/ClientsScreen': (context) => const ClientsScreen(),
   '/EditProducts': (context) => const EditProducts(),
   '/AddLocation': (context) => const AddLocation(),
   '/AddGovernment': (context) => const AddGovernment(),
